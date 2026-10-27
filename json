@@ -1,0 +1,115 @@
+{
+  "expo": {
+    "name": "KnockOut",
+    "slug": "knockout",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#12064d",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#12064d"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.knockout.app"
+    },
+    "android": {
+      "package": "com.knockout.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#12064d"
+      }
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    }
+  }
+}
+
+import React from "react";
+import { ActivityIndicator, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { DarkTheme, NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+
+import { AppProvider, useApp } from "./src/AppContext";
+import { LanguageButton } from "./src/components/UI";
+import { colors } from "./src/theme";
+import HomeScreen from "./src/screens/HomeScreen";
+import AnalyticsScreen from "./src/screens/AnalyticsScreen";
+import AboutScreen from "./src/screens/AboutScreen";
+import PrivacyScreen from "./src/screens/PrivacyScreen";
+import SignInScreen from "./src/screens/SignInScreen";
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const theme = {
+  ...DarkTheme,
+  colors: { ...DarkTheme.colors, primary: colors.gold, background: colors.purple900, card: colors.purple950, text: colors.white, border: colors.border }
+};
+
+const headerOptions = {
+  headerStyle: { backgroundColor: colors.purple950 },
+  headerTintColor: colors.gold,
+  headerTitleStyle: { fontWeight: "900" },
+  headerRight: () => <LanguageButton />
+};
+
+const ICONS = { Home: "home", Analytics: "stats-chart", About: "people", Privacy: "shield-checkmark" };
+
+function Tabs() {
+  const { t } = useApp();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        ...headerOptions,
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.purple950, borderTopColor: "rgba(255,210,26,0.25)" },
+        tabBarIcon: ({ color, size }) => <Ionicons name={ICONS[route.name]} size={size} color={color} />
+      })}
+    >
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: "KnockOut", tabBarLabel: t("nav.home") }} />
+      <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: t("a.title"), tabBarLabel: t("nav.analytics") }} />
+      <Tab.Screen name="About" component={AboutScreen} options={{ title: t("ab.title"), tabBarLabel: t("nav.about") }} />
+      <Tab.Screen name="Privacy" component={PrivacyScreen} options={{ title: t("pv.privacy"), tabBarLabel: t("nav.privacy") }} />
+    </Tab.Navigator>
+  );
+}
+
+function Root() {
+  const { ready, t } = useApp();
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.purple900, alignItems: "center", justifyContent: "center" }}>
+        <ActivityIndicator color={colors.gold} size="large" />
+      </View>
+    );
+  }
+  return (
+    <NavigationContainer theme={theme}>
+      <Stack.Navigator>
+        <Stack.Screen name="Tabs" component={Tabs} options={{ headerShown: false }} />
+        <Stack.Screen name="SignIn" component={SignInScreen} options={{ ...headerOptions, title: t("nav.signin"), presentation: "modal" }} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppProvider>
+        <StatusBar style="light" />
+        <Root />
+      </AppProvider>
+    </SafeAreaProvider>
+  );
+}
