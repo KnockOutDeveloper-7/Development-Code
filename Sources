@@ -1,0 +1,1064 @@
+/* Shared header, footer, sign-in state and language picker for every page. */
+
+// ---------- Sign-in state ----------
+// Demo only: stores the signed-in user's name and email in this browser.
+// Passwords are never stored. Swap this for a real auth provider
+// (e.g. Firebase Auth, Auth0, Supabase) before launch.
+const koAuth = {
+  get() {
+    try { return JSON.parse(localStorage.getItem("ko.user")); } catch (e) { return null; }
+  },
+  set(user) {
+    try { localStorage.setItem("ko.user", JSON.stringify(user)); } catch (e) { /* storage unavailable */ }
+  },
+  clear() {
+    try { localStorage.removeItem("ko.user"); } catch (e) { /* storage unavailable */ }
+  }
+};
+
+function koEscape(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ---------- Header & footer ----------
+function koRenderHeader() {
+  const header = document.getElementById("site-header");
+  if (!header) return;
+  const page = document.body.dataset.page;
+  const user = koAuth.get();
+  const link = (href, key, id) =>
+    `<li><a href="${href}" data-i18n="${key}" class="${page === id ? "active" : ""}"></a></li>`;
+
+  header.className = "site-header";
+  header.innerHTML = `
+    <nav class="container nav">
+      <a href="index.html" class="brand">
+        <img src="images/favicon.webp" alt="">
+        KnockOut
+      </a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">&#9776;</button>
+      <div class="nav-menu">
+        <ul class="nav-links">
+          ${link("index.html", "nav.home", "home")}
+          ${link("analytics.html", "nav.analytics", "analytics")}
+          ${link("about.html", "nav.about", "about")}
+          ${link("privacy.html", "nav.privacy", "privacy")}
+        </ul>
+        <div class="nav-actions">
+          <select class="lang-select" aria-label="Language">
+            ${Object.entries(KO_LANGS).map(([code, name]) => `<option value="${code}">${name}</option>`).join("")}
+          </select>
+          ${user
+            ? `<button class="btn btn-ghost btn-sm" id="nav-signout" data-i18n="nav.signout"></button>`
+            : `<a class="btn btn-primary btn-sm" href="signin.html" data-i18n="nav.signin"></a>`}
+        </div>
+      </div>
+    </nav>`;
+
+  const toggle = header.querySelector(".nav-toggle");
+  const menu = header.querySelector(".nav-menu");
+  toggle.addEventListener("click", () => {
+    const open = menu.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", open);
+  });
+
+  header.querySelector(".lang-select").addEventListener("change", e => koSetLang(e.target.value));
+
+  const signout = header.querySelector("#nav-signout");
+  if (signout) signout.addEventListener("click", koSignOut);
+}
+
+function koRenderFooter() {
+  const footer = document.getElementById("site-footer");
+  if (!footer) return;
+  footer.className = "site-footer";
+  footer.innerHTML = `
+    <div class="container">
+      <a href="index.html" class="brand"><img src="images/favicon.webp" alt="">KnockOut</a>
+      <p data-i18n="footer.tagline"></p>
+      <div class="footer-links">
+        <a href="index.html" data-i18n="nav.home"></a>
+        <a href="analytics.html" data-i18n="nav.analytics"></a>
+        <a href="about.html" data-i18n="nav.about"></a>
+        <a href="privacy.html" data-i18n="nav.privacy"></a>
+      </div>
+      <p>&copy; ${new Date().getFullYear()} KnockOut. <span data-i18n="footer.rights"></span></p>
+    </div>`;
+}
+
+function koSignOut() {
+  koAuth.clear();
+  window.location.href = "index.html";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  koRenderHeader();
+  koRenderFooter();
+  koApplyLang();
+});
+
+/*
+  Translations for English, German, Spanish and French.
+  Mark an element with data-i18n="key" (text) or data-i18n-placeholder="key" (input placeholder).
+*/
+const KO_STRINGS = {
+  en: {
+    "nav.home": "Home",
+    "nav.analytics": "Analytics",
+    "nav.about": "Who We Are",
+    "nav.privacy": "Privacy",
+    "nav.signin": "Sign In",
+    "nav.signout": "Sign Out",
+    "footer.tagline": "Sports analyzed.",
+    "footer.rights": "All rights reserved.",
+    "demo.note": "Games shown are demo data.",
+
+    "home.badge": "Sign up — it's free",
+    "home.heroText": "Every play, explained. KnockOut breaks down NFL, MLB, NBA and NHL games line by line so you always know what just happened and why it matters.",
+    "home.ctaSignup": "Sign Up Free",
+    "home.ctaDemo": "Watch the Demo",
+    "home.whatTitle": "What is KnockOut?",
+    "home.whatText": "KnockOut is a free sports analyzer. Pick a game and we narrate it play by play, explain the rules as they come up, and show how each moment changes who's likely to win.",
+    "home.demoTitle": "See It in Action",
+    "home.demoSub": "Pick a sport and watch the analyzer break down a game, play by play.",
+    "home.problemTitle": "The Problem",
+    "home.problemText": "Sports are hard to learn. Rules, stats and strategy can feel impossible to follow, so a lot of fans miss what's really happening on the field.",
+    "home.solutionTitle": "The Solution",
+    "home.solutionText": "KnockOut gives you a line-by-line analyzer for the major American sports, explaining every play the moment it happens.",
+    "home.ctaTitle": "The app is completely free.",
+    "home.ctaText": "Sign up now and never miss what's happening in the game.",
+    "home.ctaBtn": "Sign Up Now",
+
+    "an.winprob": "Win probability",
+    "an.whatHappened": "What happened:",
+    "an.replay": "Replay",
+    "an.pause": "Pause",
+    "an.play": "Play",
+    "an.away": "Away",
+    "an.home": "Home",
+    "an.final": "Final",
+    "an.live": "Live",
+
+    "si.title": "Welcome to KnockOut",
+    "si.sub": "Sign in to save your games and analyses.",
+    "si.subUp": "Create your free account.",
+    "si.google": "Continue with Google",
+    "si.apple": "Continue with Apple",
+    "si.or": "or",
+    "si.name": "Name",
+    "si.email": "Email",
+    "si.password": "Password",
+    "si.submit": "Sign In",
+    "si.create": "Create Account",
+    "si.noAccount": "Don't have an account?",
+    "si.haveAccount": "Already have an account?",
+    "si.signupLink": "Sign up",
+    "si.signinLink": "Sign in",
+    "si.agree": "By continuing you agree to our User Agreement and Privacy Policy.",
+
+    "a.title": "Analytics",
+    "a.sub": "Pick a game and follow it line by line.",
+    "a.live": "Live Now",
+    "a.upcoming": "Upcoming",
+    "a.past": "Past Games",
+    "a.pastSub": "Finished games and your saved analyses, organized by sport.",
+    "a.signedInAs": "Signed in as",
+    "a.guest": "You're browsing as a guest.",
+    "a.signInSave": "Sign in to save your analyses",
+    "a.pick": "Pick a live game to start the analyzer.",
+    "a.noGames": "No games right now.",
+    "a.saved": "Saved",
+    "a.all": "All",
+    "a.chatTitle": "KnockOut Assistant",
+    "a.chatPlaceholder": "Ask about a play or rule…",
+    "a.send": "Send",
+
+    "ab.title": "Who We Are",
+    "ab.sub": "The team behind KnockOut.",
+    "ab.ceo": "Chief Executive Officer",
+    "ab.cmo": "Chief Marketing Officer",
+    "ab.cfo": "Chief Financial Officer",
+    "ab.missionTitle": "Our Mission",
+    "ab.missionText": "We started KnockOut because sports should be fun for everyone, not just people who already know every rule. Our goal is to make any game easy to understand, one play at a time.",
+
+    "pv.title": "Privacy Policy & User Agreement",
+    "pv.privacy": "Privacy Policy",
+    "pv.terms": "User Agreement",
+    "pv.updated": "Last updated: October 27, 2026"
+  },
+
+  de: {
+    "nav.home": "Start",
+    "nav.analytics": "Analysen",
+    "nav.about": "Über uns",
+    "nav.privacy": "Datenschutz",
+    "nav.signin": "Anmelden",
+    "nav.signout": "Abmelden",
+    "footer.tagline": "Sport analysiert.",
+    "footer.rights": "Alle Rechte vorbehalten.",
+    "demo.note": "Die gezeigten Spiele sind Demodaten.",
+
+    "home.badge": "Registrieren — kostenlos",
+    "home.heroText": "Jeder Spielzug erklärt. KnockOut analysiert NFL-, MLB-, NBA- und NHL-Spiele Zeile für Zeile, damit du immer weißt, was gerade passiert ist und warum es wichtig ist.",
+    "home.ctaSignup": "Kostenlos registrieren",
+    "home.ctaDemo": "Demo ansehen",
+    "home.whatTitle": "Was ist KnockOut?",
+    "home.whatText": "KnockOut ist ein kostenloser Sport-Analysator. Wähle ein Spiel, und wir kommentieren es Spielzug für Spielzug, erklären die Regeln und zeigen, wie jeder Moment die Siegchancen verändert.",
+    "home.demoTitle": "So funktioniert's",
+    "home.demoSub": "Wähle eine Sportart und sieh zu, wie der Analysator ein Spiel Zug für Zug aufschlüsselt.",
+    "home.problemTitle": "Das Problem",
+    "home.problemText": "Sport ist schwer zu lernen. Regeln, Statistiken und Taktik sind schwer zu verfolgen, deshalb verpassen viele Fans, was auf dem Feld wirklich passiert.",
+    "home.solutionTitle": "Die Lösung",
+    "home.solutionText": "KnockOut bietet einen Zeile-für-Zeile-Analysator für die großen amerikanischen Sportarten und erklärt jeden Spielzug in dem Moment, in dem er passiert.",
+    "home.ctaTitle": "Die App ist komplett kostenlos.",
+    "home.ctaText": "Registriere dich jetzt und verpasse nie wieder, was im Spiel passiert.",
+    "home.ctaBtn": "Jetzt registrieren",
+
+    "an.winprob": "Siegwahrscheinlichkeit",
+    "an.whatHappened": "Was passiert ist:",
+    "an.replay": "Wiederholen",
+    "an.pause": "Pause",
+    "an.play": "Abspielen",
+    "an.away": "Gast",
+    "an.home": "Heim",
+    "an.final": "Endstand",
+    "an.live": "Live",
+
+    "si.title": "Willkommen bei KnockOut",
+    "si.sub": "Melde dich an, um deine Spiele und Analysen zu speichern.",
+    "si.subUp": "Erstelle dein kostenloses Konto.",
+    "si.google": "Weiter mit Google",
+    "si.apple": "Weiter mit Apple",
+    "si.or": "oder",
+    "si.name": "Name",
+    "si.email": "E-Mail",
+    "si.password": "Passwort",
+    "si.submit": "Anmelden",
+    "si.create": "Konto erstellen",
+    "si.noAccount": "Noch kein Konto?",
+    "si.haveAccount": "Schon ein Konto?",
+    "si.signupLink": "Registrieren",
+    "si.signinLink": "Anmelden",
+    "si.agree": "Mit dem Fortfahren stimmst du unserer Nutzungsvereinbarung und Datenschutzerklärung zu.",
+
+    "a.title": "Analysen",
+    "a.sub": "Wähle ein Spiel und verfolge es Zeile für Zeile.",
+    "a.live": "Jetzt live",
+    "a.upcoming": "Demnächst",
+    "a.past": "Vergangene Spiele",
+    "a.pastSub": "Beendete Spiele und deine gespeicherten Analysen, nach Sportart sortiert.",
+    "a.signedInAs": "Angemeldet als",
+    "a.guest": "Du bist als Gast unterwegs.",
+    "a.signInSave": "Melde dich an, um Analysen zu speichern",
+    "a.pick": "Wähle ein Live-Spiel, um den Analysator zu starten.",
+    "a.noGames": "Gerade keine Spiele.",
+    "a.saved": "Gespeichert",
+    "a.all": "Alle",
+    "a.chatTitle": "KnockOut-Assistent",
+    "a.chatPlaceholder": "Frag nach einem Spielzug oder einer Regel…",
+    "a.send": "Senden",
+
+    "ab.title": "Über uns",
+    "ab.sub": "Das Team hinter KnockOut.",
+    "ab.ceo": "Geschäftsführer (CEO)",
+    "ab.cmo": "Marketingleiter (CMO)",
+    "ab.cfo": "Finanzvorstand (CFO)",
+    "ab.missionTitle": "Unsere Mission",
+    "ab.missionText": "Wir haben KnockOut gegründet, weil Sport allen Spaß machen sollte, nicht nur denen, die schon jede Regel kennen. Unser Ziel: jedes Spiel leicht verständlich machen, Spielzug für Spielzug.",
+
+    "pv.title": "Datenschutz & Nutzungsvereinbarung",
+    "pv.privacy": "Datenschutzerklärung",
+    "pv.terms": "Nutzungsvereinbarung",
+    "pv.updated": "Zuletzt aktualisiert: 27. Oktober 2026"
+  },
+
+  es: {
+    "nav.home": "Inicio",
+    "nav.analytics": "Análisis",
+    "nav.about": "Quiénes somos",
+    "nav.privacy": "Privacidad",
+    "nav.signin": "Iniciar sesión",
+    "nav.signout": "Cerrar sesión",
+    "footer.tagline": "Deportes analizados.",
+    "footer.rights": "Todos los derechos reservados.",
+    "demo.note": "Los partidos mostrados son datos de demostración.",
+
+    "home.badge": "Regístrate — es gratis",
+    "home.heroText": "Cada jugada, explicada. KnockOut analiza partidos de la NFL, MLB, NBA y NHL línea por línea para que siempre sepas qué acaba de pasar y por qué importa.",
+    "home.ctaSignup": "Regístrate gratis",
+    "home.ctaDemo": "Ver la demo",
+    "home.whatTitle": "¿Qué es KnockOut?",
+    "home.whatText": "KnockOut es un analizador deportivo gratuito. Elige un partido y lo narramos jugada por jugada, explicamos las reglas cuando aparecen y mostramos cómo cada momento cambia quién tiene más probabilidades de ganar.",
+    "home.demoTitle": "Míralo en acción",
+    "home.demoSub": "Elige un deporte y mira cómo el analizador desglosa un partido, jugada por jugada.",
+    "home.problemTitle": "El problema",
+    "home.problemText": "Los deportes son difíciles de aprender. Las reglas, estadísticas y estrategias pueden parecer imposibles de seguir, así que muchos aficionados se pierden lo que realmente pasa en el campo.",
+    "home.solutionTitle": "La solución",
+    "home.solutionText": "KnockOut te ofrece un analizador línea por línea de los principales deportes estadounidenses que explica cada jugada en el momento en que ocurre.",
+    "home.ctaTitle": "La app es completamente gratis.",
+    "home.ctaText": "Regístrate ahora y no te pierdas nada de lo que pasa en el partido.",
+    "home.ctaBtn": "Regístrate ahora",
+
+    "an.winprob": "Probabilidad de victoria",
+    "an.whatHappened": "Qué pasó:",
+    "an.replay": "Repetir",
+    "an.pause": "Pausa",
+    "an.play": "Reproducir",
+    "an.away": "Visitante",
+    "an.home": "Local",
+    "an.final": "Final",
+    "an.live": "En vivo",
+
+    "si.title": "Bienvenido a KnockOut",
+    "si.sub": "Inicia sesión para guardar tus partidos y análisis.",
+    "si.subUp": "Crea tu cuenta gratis.",
+    "si.google": "Continuar con Google",
+    "si.apple": "Continuar con Apple",
+    "si.or": "o",
+    "si.name": "Nombre",
+    "si.email": "Correo electrónico",
+    "si.password": "Contraseña",
+    "si.submit": "Iniciar sesión",
+    "si.create": "Crear cuenta",
+    "si.noAccount": "¿No tienes cuenta?",
+    "si.haveAccount": "¿Ya tienes cuenta?",
+    "si.signupLink": "Regístrate",
+    "si.signinLink": "Inicia sesión",
+    "si.agree": "Al continuar aceptas nuestro Acuerdo de usuario y nuestra Política de privacidad.",
+
+    "a.title": "Análisis",
+    "a.sub": "Elige un partido y síguelo línea por línea.",
+    "a.live": "En vivo",
+    "a.upcoming": "Próximos",
+    "a.past": "Partidos anteriores",
+    "a.pastSub": "Partidos terminados y tus análisis guardados, organizados por deporte.",
+    "a.signedInAs": "Sesión iniciada como",
+    "a.guest": "Estás navegando como invitado.",
+    "a.signInSave": "Inicia sesión para guardar tus análisis",
+    "a.pick": "Elige un partido en vivo para iniciar el analizador.",
+    "a.noGames": "No hay partidos ahora.",
+    "a.saved": "Guardado",
+    "a.all": "Todos",
+    "a.chatTitle": "Asistente KnockOut",
+    "a.chatPlaceholder": "Pregunta por una jugada o regla…",
+    "a.send": "Enviar",
+
+    "ab.title": "Quiénes somos",
+    "ab.sub": "El equipo detrás de KnockOut.",
+    "ab.ceo": "Director ejecutivo (CEO)",
+    "ab.cmo": "Director de marketing (CMO)",
+    "ab.cfo": "Director financiero (CFO)",
+    "ab.missionTitle": "Nuestra misión",
+    "ab.missionText": "Creamos KnockOut porque los deportes deberían ser divertidos para todos, no solo para quienes ya conocen cada regla. Nuestro objetivo es que cualquier partido sea fácil de entender, jugada a jugada.",
+
+    "pv.title": "Política de privacidad y acuerdo de usuario",
+    "pv.privacy": "Política de privacidad",
+    "pv.terms": "Acuerdo de usuario",
+    "pv.updated": "Última actualización: 27 de octubre de 2026"
+  },
+
+  fr: {
+    "nav.home": "Accueil",
+    "nav.analytics": "Analyses",
+    "nav.about": "Qui sommes-nous",
+    "nav.privacy": "Confidentialité",
+    "nav.signin": "Se connecter",
+    "nav.signout": "Se déconnecter",
+    "footer.tagline": "Le sport analysé.",
+    "footer.rights": "Tous droits réservés.",
+    "demo.note": "Les matchs affichés sont des données de démonstration.",
+
+    "home.badge": "Inscris-toi — c'est gratuit",
+    "home.heroText": "Chaque action, expliquée. KnockOut analyse les matchs de NFL, MLB, NBA et NHL ligne par ligne pour que tu saches toujours ce qui vient de se passer et pourquoi c'est important.",
+    "home.ctaSignup": "Inscription gratuite",
+    "home.ctaDemo": "Voir la démo",
+    "home.whatTitle": "Qu'est-ce que KnockOut ?",
+    "home.whatText": "KnockOut est un analyseur sportif gratuit. Choisis un match : nous le commentons action par action, expliquons les règles au fil du jeu et montrons comment chaque moment change les chances de victoire.",
+    "home.demoTitle": "Découvre-le en action",
+    "home.demoSub": "Choisis un sport et regarde l'analyseur décortiquer un match, action par action.",
+    "home.problemTitle": "Le problème",
+    "home.problemText": "Le sport est difficile à apprendre. Les règles, les statistiques et la stratégie peuvent sembler impossibles à suivre, alors beaucoup de fans passent à côté de ce qui se passe vraiment sur le terrain.",
+    "home.solutionTitle": "La solution",
+    "home.solutionText": "KnockOut propose un analyseur ligne par ligne des grands sports américains, qui explique chaque action au moment où elle se produit.",
+    "home.ctaTitle": "L'application est entièrement gratuite.",
+    "home.ctaText": "Inscris-toi maintenant et ne manque plus rien de ce qui se passe pendant le match.",
+    "home.ctaBtn": "S'inscrire maintenant",
+
+    "an.winprob": "Probabilité de victoire",
+    "an.whatHappened": "Ce qui s'est passé :",
+    "an.replay": "Rejouer",
+    "an.pause": "Pause",
+    "an.play": "Lecture",
+    "an.away": "Extérieur",
+    "an.home": "Domicile",
+    "an.final": "Final",
+    "an.live": "En direct",
+
+    "si.title": "Bienvenue sur KnockOut",
+    "si.sub": "Connecte-toi pour enregistrer tes matchs et analyses.",
+    "si.subUp": "Crée ton compte gratuit.",
+    "si.google": "Continuer avec Google",
+    "si.apple": "Continuer avec Apple",
+    "si.or": "ou",
+    "si.name": "Nom",
+    "si.email": "E-mail",
+    "si.password": "Mot de passe",
+    "si.submit": "Se connecter",
+    "si.create": "Créer un compte",
+    "si.noAccount": "Pas encore de compte ?",
+    "si.haveAccount": "Déjà un compte ?",
+    "si.signupLink": "S'inscrire",
+    "si.signinLink": "Se connecter",
+    "si.agree": "En continuant, tu acceptes notre Contrat d'utilisation et notre Politique de confidentialité.",
+
+    "a.title": "Analyses",
+    "a.sub": "Choisis un match et suis-le ligne par ligne.",
+    "a.live": "En direct",
+    "a.upcoming": "À venir",
+    "a.past": "Matchs passés",
+    "a.pastSub": "Matchs terminés et tes analyses enregistrées, classés par sport.",
+    "a.signedInAs": "Connecté en tant que",
+    "a.guest": "Tu navigues en tant qu'invité.",
+    "a.signInSave": "Connecte-toi pour enregistrer tes analyses",
+    "a.pick": "Choisis un match en direct pour lancer l'analyseur.",
+    "a.noGames": "Aucun match pour le moment.",
+    "a.saved": "Enregistré",
+    "a.all": "Tous",
+    "a.chatTitle": "Assistant KnockOut",
+    "a.chatPlaceholder": "Pose une question sur une action ou une règle…",
+    "a.send": "Envoyer",
+
+    "ab.title": "Qui sommes-nous",
+    "ab.sub": "L'équipe derrière KnockOut.",
+    "ab.ceo": "Directeur général (CEO)",
+    "ab.cmo": "Directeur marketing (CMO)",
+    "ab.cfo": "Directeur financier (CFO)",
+    "ab.missionTitle": "Notre mission",
+    "ab.missionText": "Nous avons créé KnockOut parce que le sport devrait être amusant pour tout le monde, pas seulement pour ceux qui connaissent déjà toutes les règles. Notre objectif : rendre chaque match facile à comprendre, action après action.",
+
+    "pv.title": "Politique de confidentialité et contrat d'utilisation",
+    "pv.privacy": "Politique de confidentialité",
+    "pv.terms": "Contrat d'utilisation",
+    "pv.updated": "Dernière mise à jour : 27 octobre 2026"
+  }
+};
+
+const KO_LANGS = { en: "English", de: "Deutsch", es: "Español", fr: "Français" };
+
+function koGetLang() {
+  try {
+    const saved = localStorage.getItem("ko.lang");
+    if (saved && KO_STRINGS[saved]) return saved;
+  } catch (e) { /* storage unavailable */ }
+  const browser = (navigator.language || "en").slice(0, 2);
+  return KO_STRINGS[browser] ? browser : "en";
+}
+
+function t(key) {
+  const lang = koGetLang();
+  return (KO_STRINGS[lang] && KO_STRINGS[lang][key]) || KO_STRINGS.en[key] || key;
+}
+
+function koApplyLang() {
+  const lang = koGetLang();
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll(".lang-select").forEach(sel => { sel.value = lang; });
+}
+
+function koSetLang(lang) {
+  try { localStorage.setItem("ko.lang", lang); } catch (e) { /* storage unavailable */ }
+  koApplyLang();
+  document.dispatchEvent(new CustomEvent("ko:lang", { detail: lang }));
+}
+
+/*
+  KnockOut demo data.
+  Every game here is sample data so the site works without a backend.
+  Replace this file with calls to a live sports data API when you have one.
+
+  Play fields:
+    t    - game clock / inning
+    text - what happened
+    note - KnockOut's explanation of the play
+    p    - home team win probability (0-100) after the play
+    s    - score after the play as [away, home] (omit when it doesn't change)
+*/
+window.KO_DATA = {
+  sports: {
+    nfl: { name: "NFL", ball: "🏈", field: "nfl" },
+    mlb: { name: "MLB", ball: "⚾", field: "mlb" },
+    nba: { name: "NBA", ball: "🏀", field: "nba" },
+    nhl: { name: "NHL", ball: "🏒", field: "nhl" }
+  },
+
+  live: [
+    {
+      id: "nfl-buf-kc",
+      sport: "nfl",
+      away: "Buffalo Bills",
+      home: "Kansas City Chiefs",
+      plays: [
+        { t: "Q1 15:00", text: "Buffalo kicks off. Returned to the KC 25-yard line.", note: "Every drive starts with field position. The 25-yard line is a typical starting spot after a kickoff.", p: 55, s: [0, 0] },
+        { t: "Q1 14:21", text: "Mahomes pass short right to Kelce for 9 yards.", note: "A 9-yard gain on 1st down leaves 2nd and 1. The offense needs 10 yards in 4 tries (downs) to keep the ball.", p: 57 },
+        { t: "Q1 13:50", text: "Pacheco runs up the middle for 3 yards. First down.", note: "A first down resets the count: Kansas City gets 4 more downs to gain another 10 yards.", p: 58 },
+        { t: "Q1 12:58", text: "Mahomes deep pass to Worthy for 38 yards!", note: "An 'explosive play' (20+ yards). Big plays like this swing win probability more than almost anything else.", p: 64 },
+        { t: "Q1 12:10", text: "False start on the KC left tackle. 5-yard penalty.", note: "A false start is when an offensive player moves before the snap. The offense is pushed back 5 yards.", p: 62 },
+        { t: "Q1 11:31", text: "Mahomes pass to Rice for 22 yards. TOUCHDOWN!", note: "A touchdown is worth 6 points. Kansas City now tries for the extra point.", p: 70, s: [0, 6] },
+        { t: "Q1 11:27", text: "Extra point is good.", note: "The extra-point kick is worth 1 point. Teams can instead go for 2 points from the 2-yard line.", p: 71, s: [0, 7] },
+        { t: "Q1 9:02", text: "Allen sacked by Jones for a loss of 7 yards.", note: "A sack is when the quarterback is tackled behind the line before he can throw. 3rd and 17 is very hard to convert.", p: 74 },
+        { t: "Q1 8:20", text: "Bills punt. Fair catch at the KC 12.", note: "On 4th down, teams usually punt to push the other team back instead of risking a turnover.", p: 72 },
+        { t: "Q1 7:45", text: "Mahomes pass intercepted by Bishop at the KC 30!", note: "An interception is a turnover: the defense caught the pass, so Buffalo gets the ball in great field position.", p: 61 },
+        { t: "Q1 6:40", text: "Allen 30-yard run. TOUCHDOWN! Extra point good.", note: "Quarterback runs are one of Buffalo's biggest weapons. The turnover turned into 7 points, and the game is tied.", p: 52, s: [7, 7] }
+      ]
+    },
+    {
+      id: "mlb-nyy-lad",
+      sport: "mlb",
+      away: "New York Yankees",
+      home: "Los Angeles Dodgers",
+      plays: [
+        { t: "Top 1st", text: "Judge walks on four pitches.", note: "A walk (base on balls) happens after 4 pitches outside the strike zone. The batter goes to first base for free.", p: 52, s: [0, 0] },
+        { t: "Top 1st", text: "Soto doubles to right-center. Judge to third.", note: "A double means the batter reached second base safely. Runners on 2nd and 3rd with no outs is a big scoring chance.", p: 45 },
+        { t: "Top 1st", text: "Stanton sacrifice fly to center. Judge scores.", note: "A sacrifice fly is an out deep enough that the runner on third can 'tag up' and score after the catch.", p: 44, s: [1, 0] },
+        { t: "Top 1st", text: "Glasnow strikes out Volpe swinging. 2 outs.", note: "Strikeouts are a pitcher's best weapon: no ball in play means the runners can't advance.", p: 46 },
+        { t: "Top 1st", text: "Rizzo grounds out to second. End of the inning.", note: "Three outs end a half-inning. The teams switch between batting and fielding.", p: 47 },
+        { t: "Bot 1st", text: "Ohtani homers to right field! Tie game.", note: "A home run scores the batter plus every runner on base. Ohtani's exit velocity shows how hard the ball was hit.", p: 55, s: [1, 1] },
+        { t: "Bot 1st", text: "Betts singles to left field.", note: "A single puts the batter on first base. With Freeman up next, the Dodgers are threatening again.", p: 57 },
+        { t: "Bot 1st", text: "Freeman grounds into a 6-4-3 double play.", note: "6-4-3 means shortstop (6) to second baseman (4) to first baseman (3). Two outs on one play kills the rally.", p: 51 },
+        { t: "Bot 2nd", text: "Cole strikes out the side.", note: "'Striking out the side' means all three outs of the inning were strikeouts.", p: 49 },
+        { t: "Top 3rd", text: "Judge crushes a two-run homer! Yankees lead.", note: "A two-run home run: Judge and the runner on base both score.", p: 36, s: [3, 1] }
+      ]
+    },
+    {
+      id: "nba-bos-lal",
+      sport: "nba",
+      away: "Boston Celtics",
+      home: "Los Angeles Lakers",
+      plays: [
+        { t: "Q1 12:00", text: "Boston wins the opening tip.", note: "The jump ball at center court decides who gets the first possession.", p: 50, s: [0, 0] },
+        { t: "Q1 11:38", text: "Tatum hits a 3-pointer from the left wing.", note: "Shots from behind the arc are worth 3 points instead of 2.", p: 46, s: [3, 0] },
+        { t: "Q1 11:10", text: "James driving layup.", note: "Attacking the rim creates high-percentage shots. Layups go in much more often than jump shots.", p: 48, s: [3, 2] },
+        { t: "Q1 10:41", text: "Shooting foul on Brown. Davis makes 2 of 2 free throws.", note: "A foul on a shooter awards free throws: uncontested shots worth 1 point each.", p: 52, s: [3, 4] },
+        { t: "Q1 10:05", text: "White steals the ball. Brown fast-break dunk!", note: "A steal is a turnover forced by the defense. Fast breaks happen before the defense sets up, so they lead to easy baskets.", p: 49, s: [5, 4] },
+        { t: "Q1 9:30", text: "Lakers shot clock violation.", note: "Teams must get a shot to hit the rim within 24 seconds, or they lose the ball.", p: 47 },
+        { t: "Q1 8:52", text: "Porzingis 3-pointer.", note: "Boston spreads the floor with shooters at every position, even center. That's called a 'five-out' offense.", p: 42, s: [8, 4] },
+        { t: "Q1 8:30", text: "Lakers call timeout.", note: "Coaches use timeouts to stop a run. Boston just scored 5 straight points.", p: 42 },
+        { t: "Q1 7:58", text: "Reaves 3-pointer and the foul! Free throw good.", note: "An 'and-one' is a made basket while being fouled, plus one free throw. On a three, that's a 4-point play.", p: 50, s: [8, 8] },
+        { t: "Q1 7:20", text: "Davis blocks Tatum at the rim!", note: "A block is when a defender legally deflects a shot attempt. Davis is one of the league's best rim protectors.", p: 52 }
+      ]
+    },
+    {
+      id: "nhl-nyr-bos",
+      sport: "nhl",
+      away: "New York Rangers",
+      home: "Boston Bruins",
+      plays: [
+        { t: "P1 20:00", text: "Boston wins the opening faceoff.", note: "Faceoffs restart play. Winning them means your team starts with the puck.", p: 52, s: [0, 0] },
+        { t: "P1 17:45", text: "Pastrnak wrist shot. Saved by Shesterkin.", note: "A save is when the goalie stops a shot on goal. Shots on goal show which team is controlling play.", p: 53 },
+        { t: "P1 15:12", text: "Rangers called offside at the blue line.", note: "Offside: an attacking player can't enter the offensive zone before the puck crosses the blue line.", p: 53 },
+        { t: "P1 13:30", text: "Tripping penalty on McAvoy. 2 minutes.", note: "A minor penalty sends a player to the penalty box for 2 minutes. The Rangers get a power play (one extra skater).", p: 46 },
+        { t: "P1 12:02", text: "Panarin power-play GOAL!", note: "A power-play goal is scored while the other team is short-handed. The penalty ends as soon as a goal is scored.", p: 38, s: [1, 0] },
+        { t: "P1 9:40", text: "Icing on the Rangers.", note: "Icing: shooting the puck from your own half past the other team's goal line. The faceoff moves to your end, and your tired players can't change.", p: 40 },
+        { t: "P1 6:15", text: "Marchand scores from the slot! Tie game.", note: "The 'slot' is the area right in front of the net, the best spot on the ice to score from.", p: 50, s: [1, 1] },
+        { t: "P1 3:20", text: "Swayman glove save on a Kreider breakaway!", note: "A breakaway is a shooter alone against the goalie with no defenders in between.", p: 52 },
+        { t: "P1 0:00", text: "End of the 1st period.", note: "Hockey has three 20-minute periods. Teams switch ends after each one.", p: 51 }
+      ]
+    }
+  ],
+
+  upcoming: [
+    { id: "up-nfl-1", sport: "nfl", away: "Dallas Cowboys", home: "Philadelphia Eagles", when: "Sun 4:25 PM" },
+    { id: "up-nfl-2", sport: "nfl", away: "Green Bay Packers", home: "Detroit Lions", when: "Mon 8:15 PM" },
+    { id: "up-mlb-1", sport: "mlb", away: "Houston Astros", home: "Atlanta Braves", when: "Tonight 7:20 PM" },
+    { id: "up-mlb-2", sport: "mlb", away: "Chicago Cubs", home: "St. Louis Cardinals", when: "Tomorrow 1:15 PM" },
+    { id: "up-nba-1", sport: "nba", away: "Golden State Warriors", home: "Denver Nuggets", when: "Tonight 10:00 PM" },
+    { id: "up-nba-2", sport: "nba", away: "Miami Heat", home: "New York Knicks", when: "Fri 7:30 PM" },
+    { id: "up-nhl-1", sport: "nhl", away: "Toronto Maple Leafs", home: "Montreal Canadiens", when: "Sat 7:00 PM" },
+    { id: "up-nhl-2", sport: "nhl", away: "Edmonton Oilers", home: "Vegas Golden Knights", when: "Sun 9:00 PM" }
+  ],
+
+  past: [
+    {
+      id: "past-nfl-1", sport: "nfl", away: "San Francisco 49ers", home: "Seattle Seahawks", date: "Oct 20",
+      plays: [
+        { t: "Q2 4:10", text: "McCaffrey 12-yard touchdown run.", note: "The 49ers' outside-zone run scheme creates cutback lanes for the running back.", p: 38, s: [7, 3] },
+        { t: "Q3 9:55", text: "Seattle field goal from 48 yards.", note: "A field goal is worth 3 points. Teams kick one when they're in range but can't reach the end zone.", p: 45, s: [7, 6] },
+        { t: "Q4 1:02", text: "Purdy to Aiyuk, 25 yards. Touchdown!", note: "A late score with under 2 minutes left puts the game nearly out of reach.", p: 8, s: [14, 6] }
+      ]
+    },
+    {
+      id: "past-mlb-1", sport: "mlb", away: "Boston Red Sox", home: "Toronto Blue Jays", date: "Oct 18",
+      plays: [
+        { t: "Bot 4th", text: "Guerrero Jr. solo home run.", note: "A solo home run scores only the batter because the bases were empty.", p: 60, s: [0, 1] },
+        { t: "Top 7th", text: "Devers RBI double.", note: "RBI means 'runs batted in': the batter gets credit for driving a run home.", p: 50, s: [1, 1] },
+        { t: "Bot 9th", text: "Walk-off single by Bichette!", note: "A walk-off ends the game immediately when the home team takes the lead in its last at-bat.", p: 100, s: [1, 2] }
+      ]
+    },
+    {
+      id: "past-nba-1", sport: "nba", away: "Phoenix Suns", home: "Dallas Mavericks", date: "Oct 22",
+      plays: [
+        { t: "Q2 3:40", text: "Doncic step-back 3-pointer.", note: "A step-back creates space from the defender right before the shot.", p: 58, s: [50, 54] },
+        { t: "Q4 2:15", text: "Booker pull-up jumper ties it.", note: "'Clutch time' is the last 5 minutes of a close game, when every possession matters most.", p: 50, s: [101, 101] },
+        { t: "Q4 0:03", text: "Irving game-winning floater!", note: "A floater is a soft, high-arcing shot over taller defenders near the basket.", p: 99, s: [101, 103] }
+      ]
+    },
+    {
+      id: "past-nhl-1", sport: "nhl", away: "Colorado Avalanche", home: "Dallas Stars", date: "Oct 21",
+      plays: [
+        { t: "P1 8:12", text: "MacKinnon goal on the rush.", note: "Scoring 'on the rush' means attacking before the defense can get set.", p: 40, s: [1, 0] },
+        { t: "P3 4:30", text: "Robertson power-play goal ties it.", note: "Special teams (power play and penalty kill) often decide close games.", p: 50, s: [1, 1] },
+        { t: "OT 2:44", text: "Makar wins it in overtime!", note: "In the regular season, overtime is 5 minutes of 3-on-3. The first goal wins.", p: 0, s: [2, 1] }
+      ]
+    }
+  ],
+
+  // Used by the chatbot to explain terms.
+  glossary: [
+    { words: ["first down"], def: "In football, the offense gets 4 tries (downs) to gain 10 yards. Make it, and they get a new 'first down' with 4 more tries." },
+    { words: ["touchdown"], def: "A touchdown (6 points) is scored by carrying or catching the ball in the other team's end zone. It's followed by an extra point (1) or a 2-point try." },
+    { words: ["field goal"], def: "A field goal is a kick through the uprights worth 3 points." },
+    { words: ["sack"], def: "A sack is when the quarterback is tackled behind the line of scrimmage before he can throw." },
+    { words: ["interception", "pick"], def: "An interception is when a defender catches a pass meant for the offense. It's a turnover: the defense's team gets the ball." },
+    { words: ["punt"], def: "A punt is a kick on 4th down that gives the ball to the other team but pushes them far back down the field." },
+    { words: ["false start"], def: "A false start is a 5-yard penalty when an offensive player moves before the snap." },
+    { words: ["walk-off", "walkoff", "walk off"], def: "A walk-off is when the home team takes the lead in the last inning, which ends the game immediately." },
+    { words: ["walk", "base on balls"], def: "A walk happens when the pitcher throws 4 balls (pitches outside the strike zone). The batter goes to first base." },
+    { words: ["double play", "6-4-3"], def: "A double play gets two outs on one play. '6-4-3' means shortstop to second baseman to first baseman." },
+    { words: ["sacrifice fly", "sac fly", "tag up"], def: "A sacrifice fly is a caught fly ball deep enough that a runner on third can tag the base and score after the catch." },
+    { words: ["strikeout", "strike out"], def: "A strikeout is when the batter gets 3 strikes. It's an out." },
+    { words: ["home run", "homer"], def: "A home run is a hit that lets the batter circle all the bases, usually by hitting the ball over the outfield wall. Every runner on base scores too." },
+    { words: ["rbi"], def: "RBI stands for 'runs batted in': a run that scored because of the batter's hit, walk, or out." },
+    { words: ["three", "3-pointer", "three-pointer"], def: "A basket made from behind the 3-point arc is worth 3 points." },
+    { words: ["free throw"], def: "A free throw is an uncontested shot from the foul line, worth 1 point. Players get them after certain fouls." },
+    { words: ["shot clock"], def: "In the NBA, the offense has 24 seconds to get a shot to hit the rim, or it loses the ball." },
+    { words: ["and-one", "and one"], def: "An 'and-one' is when a player makes a basket while being fouled, then gets one bonus free throw." },
+    { words: ["block"], def: "A block is when a defender legally deflects a shot attempt." },
+    { words: ["steal"], def: "A steal is when a defender takes the ball away from the offense." },
+    { words: ["power play"], def: "In hockey, a power play is when one team has more players on the ice because the other team has a player in the penalty box." },
+    { words: ["offside"], def: "In hockey, an attacking player can't cross the blue line into the offensive zone before the puck does." },
+    { words: ["icing"], def: "Icing is when a team shoots the puck from its own half past the other team's goal line. Play restarts in the offending team's end." },
+    { words: ["faceoff", "face-off"], def: "A faceoff is how hockey restarts play: the referee drops the puck between two players." },
+    { words: ["penalty"], def: "A penalty is a rule violation. In hockey, minor penalties send a player to the box for 2 minutes. In football, they move the ball forward or back." },
+    { words: ["win probability", "win prob", "percent"], def: "Win probability is KnockOut's estimate of each team's chance to win, based on the score, time left, and game situation. The ball on the field moves toward the team that's favored." }
+  ]
+};
+
+/*
+  KnockOut Assistant: a simple rule-based chatbot that answers questions about
+  the game in the analyzer and explains sports terms from KO_DATA.glossary.
+  To make it smarter, send the question plus the current game's plays to an
+  AI model from your own backend (never put an API key in front-end code).
+*/
+function koChatAnswer(question, ctx) {
+  const q = question.toLowerCase();
+  const { game, play } = ctx;
+  const has = (...words) => words.some(w => q.includes(w));
+
+  if (/^(hi|hey|hello|yo|sup)\b/.test(q)) {
+    return "Hey! Pick a game from Live Now, then ask me anything about it.";
+  }
+
+  // Questions about sports terms come first so "what is a power play" works anywhere.
+  const term = KO_DATA.glossary.find(entry => entry.words.some(w => q.includes(w)));
+  if (term && !has("score", "winning", "just happened", "last play")) return term.def;
+
+  if (has("score")) {
+    if (!game || !play) return "Open a game first and I'll tell you the score.";
+    const s = [...game.plays.slice(0, ctx.analyzer.index)].reverse().find(p => p.s) || { s: [0, 0] };
+    return `${game.away} ${s.s[0]}, ${game.home} ${s.s[1]} (${play.t}).`;
+  }
+
+  if (has("winning", "win", "favorite", "favored", "chance")) {
+    if (!game || !play) return "Open a game first and I'll show you each team's chances.";
+    const leader = play.p >= 50 ? game.home : game.away;
+    const pct = play.p >= 50 ? play.p : 100 - play.p;
+    return `Right now ${leader} has about a ${pct}% chance to win, based on the score, time left and game situation.`;
+  }
+
+  if (has("happened", "last play", "explain", "why", "what was that", "mean")) {
+    if (!game || !play) return "Pick a live game and I'll explain each play as it happens.";
+    return `${play.text} ${play.note}`;
+  }
+
+  if (has("upcoming", "next game", "schedule", "when")) {
+    const list = KO_DATA.upcoming.filter(g => ctx.sport === "all" || g.sport === ctx.sport).slice(0, 3);
+    if (!list.length) return "There are no upcoming games for this sport right now.";
+    return "Coming up: " + list.map(g => `${g.away} @ ${g.home} (${g.when})`).join("; ") + ".";
+  }
+
+  if (has("nfl", "football")) return "The NFL is American football: 4 quarters of 15 minutes. Teams score with touchdowns (6), extra points (1 or 2) and field goals (3).";
+  if (has("mlb", "baseball")) return "MLB is baseball: 9 innings. Each team bats until it makes 3 outs, and runs score when a runner touches home plate.";
+  if (has("nba", "basketball")) return "The NBA is basketball: 4 quarters of 12 minutes. Baskets are worth 2 or 3 points, and free throws are worth 1.";
+  if (has("nhl", "hockey")) return "The NHL is ice hockey: 3 periods of 20 minutes. Each goal is worth 1 point.";
+
+  return "I'm not sure about that one yet. Try asking \"what just happened?\", \"what's the score?\", or about a term like \"first down\", \"double play\", \"shot clock\" or \"icing\".";
+}
+
+/*
+  Line-by-line game analyzer.
+  Renders a scoreboard, a field with the ball sliding toward the team that's
+  more likely to win, and a feed where each play types out followed by
+  KnockOut's explanation.
+*/
+class KOAnalyzer {
+  constructor(root, options = {}) {
+    this.root = root;
+    this.options = Object.assign({ delay: 3200, typeSpeed: 18, controls: true, loop: false }, options);
+    this.game = null;
+    this.index = 0;
+    this.timer = null;
+    this.playing = false;
+  }
+
+  load(game, { instant = false } = {}) {
+    this.stop();
+    this.game = game;
+    this.index = 0;
+    this.score = [0, 0];
+    this.render();
+    if (instant) {
+      game.plays.forEach(play => this.addLine(play, false));
+      this.index = game.plays.length;
+      this.updateControls();
+    } else {
+      this.play();
+    }
+  }
+
+  render() {
+    const g = this.game;
+    const sport = KO_DATA.sports[g.sport];
+    this.root.innerHTML = `
+      <div class="analyzer">
+        <div class="scoreboard">
+          <div class="team">
+            <span class="team-label" data-i18n="an.away"></span>
+            <span class="team-name">${koEscape(g.away)}</span>
+          </div>
+          <div class="score" aria-live="polite">0 – 0</div>
+          <div class="team home">
+            <span class="team-label" data-i18n="an.home"></span>
+            <span class="team-name">${koEscape(g.home)}</span>
+          </div>
+        </div>
+        <div class="game-clock">${sport.name} · <span class="clock">—</span></div>
+        <div class="field ${sport.field}"><span class="field-ball">${sport.ball}</span></div>
+        <div class="winprob">
+          <span><strong class="wp-away">50%</strong></span>
+          <span data-i18n="an.winprob"></span>
+          <span><strong class="wp-home">50%</strong></span>
+        </div>
+        <ol class="feed"></ol>
+        ${this.options.controls ? `
+          <div class="analyzer-controls">
+            <button class="btn btn-ghost btn-sm" data-act="toggle"></button>
+            <button class="btn btn-ghost btn-sm" data-act="replay" data-i18n="an.replay"></button>
+          </div>` : ""}
+      </div>`;
+
+    this.els = {
+      score: this.root.querySelector(".score"),
+      clock: this.root.querySelector(".clock"),
+      ball: this.root.querySelector(".field-ball"),
+      wpAway: this.root.querySelector(".wp-away"),
+      wpHome: this.root.querySelector(".wp-home"),
+      feed: this.root.querySelector(".feed"),
+      toggle: this.root.querySelector('[data-act="toggle"]')
+    };
+
+    if (this.options.controls) {
+      this.els.toggle.addEventListener("click", () => (this.playing ? this.stop() : this.play()));
+      this.root.querySelector('[data-act="replay"]').addEventListener("click", () => this.load(this.game));
+    }
+    koApplyLang();
+  }
+
+  play() {
+    if (!this.game) return;
+    if (this.index >= this.game.plays.length) {
+      if (!this.options.loop) return;
+      this.load(this.game);
+      return;
+    }
+    this.playing = true;
+    this.updateControls();
+    this.step();
+  }
+
+  stop() {
+    this.playing = false;
+    clearTimeout(this.timer);
+    clearInterval(this.typing);
+    this.updateControls();
+  }
+
+  step() {
+    if (!this.playing) return;
+    const play = this.game.plays[this.index];
+    this.addLine(play, true);
+    this.index++;
+    if (this.options.onLine) this.options.onLine(this.game, play, this.index);
+
+    if (this.index >= this.game.plays.length) {
+      this.timer = setTimeout(() => {
+        this.playing = false;
+        this.updateControls();
+        if (this.options.onDone) this.options.onDone(this.game);
+        if (this.options.loop) this.timer = setTimeout(() => this.load(this.game), 2500);
+      }, this.options.delay);
+      return;
+    }
+    this.timer = setTimeout(() => this.step(), this.options.delay);
+  }
+
+  addLine(play, animate) {
+    const li = document.createElement("li");
+    li.className = "feed-item";
+    li.innerHTML = `
+      <div class="feed-time">${koEscape(play.t)}</div>
+      <div class="feed-text"></div>
+      <div class="feed-note"><b>${t("an.whatHappened")}</b> ${koEscape(play.note)}</div>`;
+    this.els.feed.prepend(li);
+
+    const text = li.querySelector(".feed-text");
+    const note = li.querySelector(".feed-note");
+
+    if (animate) {
+      clearInterval(this.typing);
+      let i = 0;
+      text.classList.add("typing");
+      this.typing = setInterval(() => {
+        text.textContent = play.text.slice(0, ++i);
+        if (i >= play.text.length) {
+          clearInterval(this.typing);
+          text.classList.remove("typing");
+          note.classList.add("show");
+        }
+      }, this.options.typeSpeed);
+    } else {
+      text.textContent = play.text;
+      note.classList.add("show");
+    }
+
+    this.updateBoard(play, animate);
+  }
+
+  updateBoard(play, animate) {
+    this.els.clock.textContent = play.t;
+
+    if (play.s) {
+      const changed = play.s[0] !== this.score[0] || play.s[1] !== this.score[1];
+      this.score = play.s;
+      this.els.score.textContent = `${play.s[0]} – ${play.s[1]}`;
+      if (changed && animate) {
+        this.els.score.classList.remove("bump");
+        void this.els.score.offsetWidth; // restart the animation
+        this.els.score.classList.add("bump");
+        this.els.ball.classList.remove("hit");
+        void this.els.ball.offsetWidth;
+        this.els.ball.classList.add("hit");
+      }
+    }
+
+    const home = Math.max(0, Math.min(100, play.p));
+    this.els.wpHome.textContent = `${home}%`;
+    this.els.wpAway.textContent = `${100 - home}%`;
+    // Away team is on the left, home on the right: the ball drifts toward the favorite.
+    this.els.ball.style.left = `${6 + home * 0.88}%`;
+  }
+
+  updateControls() {
+    if (!this.els || !this.els.toggle) return;
+    this.els.toggle.dataset.i18n = this.playing ? "an.pause" : "an.play";
+    this.els.toggle.textContent = t(this.els.toggle.dataset.i18n);
+  }
+
+  get currentPlay() {
+    return this.game && this.index > 0 ? this.game.plays[this.index - 1] : null;
+  }
+}
+
+/* Analytics page: sport tabs, live + upcoming games, analyzer, saved history, chatbot. */
+document.addEventListener("DOMContentLoaded", () => {
+  const state = { sport: "all", pastSport: "all", game: null };
+  const user = koAuth.get();
+
+  const analyzer = new KOAnalyzer(document.getElementById("analyzer"), {
+    onLine: (game, play, count) => saveAnalysis(game, count)
+  });
+
+  // ---------- Saved analyses ----------
+  // Each line the analyzer shows is saved for signed-in users, so they can
+  // come back to it later under Past Games.
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem("ko.history")) || {}; } catch (e) { return {}; }
+  }
+
+  function saveAnalysis(game, count) {
+    if (!user) return;
+    const history = getHistory();
+    history[game.id] = {
+      id: game.id,
+      sport: game.sport,
+      away: game.away,
+      home: game.home,
+      date: new Date().toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+      saved: true,
+      plays: game.plays.slice(0, count)
+    };
+    try { localStorage.setItem("ko.history", JSON.stringify(history)); } catch (e) { /* storage full or blocked */ }
+    renderPast();
+  }
+
+  // ---------- Account bar ----------
+  function renderAccount() {
+    const bar = document.getElementById("account-bar");
+    if (user) {
+      bar.innerHTML = `
+        <span><span data-i18n="a.signedInAs"></span> <strong>${koEscape(user.name)}</strong></span>
+        <button class="btn btn-ghost btn-sm" id="signout-btn" data-i18n="nav.signout"></button>`;
+      bar.querySelector("#signout-btn").addEventListener("click", koSignOut);
+    } else {
+      bar.innerHTML = `
+        <span data-i18n="a.guest"></span>
+        <a href="signin.html" data-i18n="a.signInSave"></a>`;
+    }
+  }
+
+  // ---------- Tabs ----------
+  function renderTabs(el, active, onPick) {
+    const options = [["all", t("a.all")], ...Object.entries(KO_DATA.sports).map(([k, s]) => [k, `${s.ball} ${s.name}`])];
+    el.innerHTML = options.map(([key, label]) =>
+      `<button class="sport-tab ${key === active ? "active" : ""}" data-sport="${key}">${label}</button>`).join("");
+    el.querySelectorAll(".sport-tab").forEach(btn => btn.addEventListener("click", () => onPick(btn.dataset.sport)));
+  }
+
+  const matches = (sport, game) => sport === "all" || game.sport === sport;
+
+  // ---------- Live + upcoming ----------
+  function renderGames() {
+    renderTabs(document.getElementById("sport-tabs"), state.sport, sport => {
+      state.sport = sport;
+      renderGames();
+    });
+
+    const live = KO_DATA.live.filter(g => matches(state.sport, g));
+    document.getElementById("live-list").innerHTML = live.length
+      ? live.map(g => {
+          const last = [...g.plays].reverse().find(p => p.s) || { s: [0, 0] };
+          return `
+            <button class="game-item ${state.game && state.game.id === g.id ? "selected" : ""}" data-id="${g.id}">
+              <div class="row"><span class="teams">${koEscape(g.away)}</span><span>${last.s[0]}</span></div>
+              <div class="row"><span class="teams">${koEscape(g.home)}</span><span>${last.s[1]}</span></div>
+              <div class="meta">${KO_DATA.sports[g.sport].ball} ${KO_DATA.sports[g.sport].name}</div>
+            </button>`;
+        }).join("")
+      : `<p class="empty" data-i18n="a.noGames"></p>`;
+
+    document.querySelectorAll("#live-list .game-item").forEach(btn =>
+      btn.addEventListener("click", () => openGame(KO_DATA.live.find(g => g.id === btn.dataset.id))));
+
+    const upcoming = KO_DATA.upcoming.filter(g => matches(state.sport, g));
+    document.getElementById("upcoming-list").innerHTML = upcoming.length
+      ? upcoming.map(g => `
+          <button class="game-item" disabled>
+            <div class="teams">${koEscape(g.away)} @ ${koEscape(g.home)}</div>
+            <div class="meta">${KO_DATA.sports[g.sport].ball} ${KO_DATA.sports[g.sport].name} · ${koEscape(g.when)}</div>
+          </button>`).join("")
+      : `<p class="empty" data-i18n="a.noGames"></p>`;
+
+    koApplyLang();
+  }
+
+  function openGame(game, instant = false) {
+    state.game = game;
+    analyzer.load(game, { instant });
+    renderGames();
+    if (window.innerWidth < 900 || instant) {
+      document.getElementById("analyzer").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // ---------- Past games ----------
+  function renderPast() {
+    renderTabs(document.getElementById("past-tabs"), state.pastSport, sport => {
+      state.pastSport = sport;
+      renderPast();
+    });
+
+    const saved = Object.values(getHistory());
+    const all = [...saved, ...KO_DATA.past].filter(g => matches(state.pastSport, g));
+    const grid = document.getElementById("past-grid");
+
+    grid.innerHTML = all.length
+      ? all.map(g => {
+          const last = [...g.plays].reverse().find(p => p.s) || { s: [0, 0] };
+          return `
+            <button class="card past-card" data-id="${g.id}" data-saved="${g.saved ? 1 : 0}">
+              <span class="tag ${g.saved ? "tag-gold" : "tag-muted"}">${g.saved ? t("a.saved") : t("an.final")}</span>
+              <div class="final">${last.s[0]} – ${last.s[1]}</div>
+              <div><strong>${koEscape(g.away)}</strong> @ <strong>${koEscape(g.home)}</strong></div>
+              <div class="meta">${KO_DATA.sports[g.sport].ball} ${KO_DATA.sports[g.sport].name} · ${koEscape(g.date)} · ${g.plays.length} plays</div>
+            </button>`;
+        }).join("")
+      : `<p class="empty" data-i18n="a.noGames"></p>`;
+
+    grid.querySelectorAll(".past-card").forEach(card => card.addEventListener("click", () => {
+      const pool = card.dataset.saved === "1" ? saved : KO_DATA.past;
+      openGame(pool.find(g => g.id === card.dataset.id), true);
+    }));
+
+    koApplyLang();
+  }
+
+  // ---------- Chatbot ----------
+  const panel = document.getElementById("chat-panel");
+  const log = document.getElementById("chat-log");
+  const input = document.getElementById("chat-input");
+
+  function addMsg(text, who) {
+    const div = document.createElement("div");
+    div.className = `msg ${who}`;
+    div.textContent = text;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function ask(question) {
+    addMsg(question, "user");
+    setTimeout(() => addMsg(koChatAnswer(question, { game: state.game, play: analyzer.currentPlay, analyzer, sport: state.sport }), "bot"), 350);
+  }
+
+  document.getElementById("chat-fab").addEventListener("click", () => {
+    panel.classList.toggle("open");
+    if (panel.classList.contains("open")) input.focus();
+  });
+  document.getElementById("chat-close").addEventListener("click", () => panel.classList.remove("open"));
+
+  document.getElementById("chat-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = "";
+    ask(q);
+  });
+
+  const suggestions = ["What just happened?", "What's the score?", "Who's winning?", "What is a power play?"];
+  document.getElementById("chat-suggestions").innerHTML =
+    suggestions.map(s => `<button type="button">${s}</button>`).join("");
+  document.querySelectorAll("#chat-suggestions button").forEach(b => b.addEventListener("click", () => ask(b.textContent)));
+
+  addMsg("Hi! I'm the KnockOut Assistant. Pick a game and ask me what just happened, the score, or what any rule means.", "bot");
+
+  // ---------- Start ----------
+  document.addEventListener("ko:lang", () => { renderAccount(); renderGames(); renderPast(); });
+  renderAccount();
+  renderGames();
+  renderPast();
+});
