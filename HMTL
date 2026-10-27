@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Who We Are | KnockOut</title>
+  <link rel="icon" type="image/webp" href="images/favicon.webp">
+  <link rel="apple-touch-icon" href="images/favicon.webp">
+  <meta name="theme-color" content="#2a0fa8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="about">
+  <header id="site-header"></header>
+
+  <main>
+    <div class="page-hero">
+      <div class="container">
+        <h1 data-i18n="ab.title"></h1>
+        <p data-i18n="ab.sub"></p>
+      </div>
+    </div>
+
+    <section style="padding-top: 40px;">
+      <div class="container">
+        <!-- Replace the names, initials and bios below with your team's details. -->
+        <div class="grid">
+          <div class="card team-card">
+            <div class="avatar">B</div>
+            <h3>Bela</h3>
+            <div class="role" data-i18n="ab.ceo"></div>
+            <p>Leads KnockOut's vision and product, and makes sure every feature helps fans understand the game.</p>
+          </div>
+          <div class="card team-card">
+            <div class="avatar">?</div>
+            <h3>[CMO name]</h3>
+            <div class="role" data-i18n="ab.cmo"></div>
+            <p>Grows the KnockOut community and gets the word out to fans everywhere.</p>
+          </div>
+          <div class="card team-card">
+            <div class="avatar">?</div>
+            <h3>[CFO name]</h3>
+            <div class="role" data-i18n="ab.cfo"></div>
+            <p>Manages KnockOut's finances and keeps the app free for everyone.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt-bg">
+      <div class="container" style="max-width: 760px; text-align: center;">
+        <h2 class="section-title" data-i18n="ab.missionTitle"></h2>
+        <p class="section-subtitle" style="margin-bottom: 30px; font-size: 1.1rem;" data-i18n="ab.missionText"></p>
+        <a href="signin.html?mode=signup" class="btn btn-primary" data-i18n="home.ctaSignup"></a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
