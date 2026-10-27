@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics | KnockOut</title>
+  <link rel="icon" type="image/webp" href="images/favicon.webp">
+  <link rel="apple-touch-icon" href="images/favicon.webp">
+  <meta name="theme-color" content="#2a0fa8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="analytics">
+  <header id="site-header"></header>
+
+  <main>
+    <div class="page-hero">
+      <div class="container">
+        <h1 data-i18n="a.title"></h1>
+        <p data-i18n="a.sub"></p>
+      </div>
+    </div>
+
+    <section style="padding-top: 30px;">
+      <div class="container">
+        <!-- Sign out section -->
+        <div class="account-bar" id="account-bar"></div>
+
+        <!-- NFL, MLB, NBA, NHL on top -->
+        <div class="sport-tabs" id="sport-tabs"></div>
+
+        <div class="analytics-layout">
+          <aside>
+            <h2 class="panel-title"><span class="tag tag-live" data-i18n="an.live"></span> <span data-i18n="a.live"></span></h2>
+            <div class="game-list" id="live-list"></div>
+
+            <h2 class="panel-title" data-i18n="a.upcoming"></h2>
+            <div class="game-list" id="upcoming-list"></div>
+          </aside>
+
+          <div id="analyzer">
+            <div class="analyzer analyzer-empty">
+              <div>
+                <div class="big">📊</div>
+                <p data-i18n="a.pick"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="demo-note" data-i18n="demo.note"></p>
+      </div>
+    </section>
+
+    <!-- Past games, organized by sport -->
+    <section class="alt-bg" id="past">
+      <div class="container">
+        <h2 class="section-title" data-i18n="a.past"></h2>
+        <p class="section-subtitle" data-i18n="a.pastSub"></p>
+        <div class="sport-tabs" id="past-tabs"></div>
+        <div class="past-grid" id="past-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <!-- Chatbot -->
+  <button class="chat-fab" id="chat-fab" aria-label="Open chat">💬</button>
+  <div class="chat-panel" id="chat-panel" role="dialog" aria-label="KnockOut Assistant">
+    <div class="chat-head">
+      <span data-i18n="a.chatTitle"></span>
+      <button id="chat-close" aria-label="Close chat">&times;</button>
+    </div>
+    <div class="chat-log" id="chat-log"></div>
+    <div class="chat-suggestions" id="chat-suggestions"></div>
+    <form class="chat-form" id="chat-form">
+      <input class="input" id="chat-input" autocomplete="off" data-i18n-placeholder="a.chatPlaceholder">
+      <button class="btn btn-primary btn-sm" type="submit" data-i18n="a.send"></button>
+    </form>
+  </div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/analyzer.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script src="js/analytics.js"></script>
+</body>
+</html>
