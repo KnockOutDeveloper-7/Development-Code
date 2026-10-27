@@ -1,0 +1,52 @@
+# KnockOut — Sports analyzed
+
+A free, line-by-line analyzer for NFL, MLB, NBA and NHL games.
+
+```
+knockout/
+├── website/   # Plain HTML/CSS/JS website
+└── app/       # iPhone + Android app (React Native / Expo)
+```
+
+Both share the same pages, translations (English, German, Spanish, French) and demo game data.
+
+| Page | Website | App |
+| --- | --- | --- |
+| Home | `index.html` | Home tab |
+| Sign in | `signin.html` | Sign In screen |
+| Analytics | `analytics.html` | Analytics tab |
+| Who We Are | `about.html` | Who We Are tab |
+| Privacy Policy & User Agreement | `privacy.html` | Privacy tab |
+
+## Website
+
+No build step. Open `website/index.html` in a browser, or serve the folder:
+
+```bash
+python3 -m http.server 8000 --directory website
+```
+
+Then go to http://localhost:8000. The `website` folder can be uploaded as-is to any static host (GitHub Pages, Netlify, Vercel).
+
+## App
+
+Needs [Node.js](https://nodejs.org) (LTS).
+
+```bash
+cd app
+npm install
+npx expo install --fix
+npx expo start
+```
+
+Scan the QR code with the **Expo Go** app on your phone to open KnockOut. Building for the App Store or Google Play is done with [EAS Build](https://docs.expo.dev/build/introduction/).
+
+## Before launch
+
+These parts are demo stand-ins:
+
+- **Game data** — `website/js/data.js` and `app/src/data.js` hold sample games. Swap in a live sports data API.
+- **Sign in** — Google, Apple and email sign-in only save a name on the device. Connect a real auth provider (Firebase Auth, Supabase, Auth0, or Google Identity Services + Sign in with Apple).
+- **Chatbot** — rule-based answers from a glossary. For full AI answers, call an AI model from your own backend.
+- **Who We Are** — fill in the CMO and CFO names and bios.
+- **Privacy Policy** — template text; add your contact email and have it reviewed by a lawyer.
