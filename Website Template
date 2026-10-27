@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knockout</title>
+<style>
+  :root {
+    --ko-ink-900: #0f0d0c;
+    --ko-ink-800: #1a1614;
+    --ko-ink-700: #2a2421;
+    --ko-ember-600: #6b2a22;
+    --ko-ember-500: #8c3a2d;
+    --ko-ochre-400: #b0793f;
+    --ko-bone-100: #f2ece4;
+    --ko-bone-300: #bfb4a7;
+    --ko-line: rgba(242, 236, 228, 0.12);
+    --ko-max: 1140px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--ko-ink-900);
+    color: var(--ko-bone-100);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: var(--ko-max); margin: 0 auto; padding: 0 24px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .grain { position: relative; isolation: isolate; overflow: hidden; }
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none; z-index: -1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(15, 13, 12, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--ko-line);
+  }
+  .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 18px; }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--ko-bone-300); }
+  .nav-links a:hover { color: var(--ko-bone-100); }
+
+  /* Buttons */
+  .btn {
+    display: inline-block; padding: 12px 22px; border-radius: 999px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    border: 1px solid transparent; transition: background .2s, border-color .2s;
+    background: none; color: var(--ko-bone-100); font-family: inherit;
+  }
+  .btn-primary { background: var(--ko-ember-500); }
+  .btn-primary:hover { background: #9c4433; }
+  .btn-ghost { border-color: rgba(242, 236, 228, 0.25); }
+  .btn-ghost:hover { border-color: rgba(242, 236, 228, 0.5); }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(172deg, var(--ko-ink-800) 0%, var(--ko-ink-900) 55%, var(--ko-ember-600) 100%);
+    padding: 120px 0 120px;
+  }
+  .eyebrow {
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ko-bone-300); margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(44px, 7vw, 84px); line-height: 1;
+    letter-spacing: -0.03em; font-weight: 700; max-width: 900px;
+  }
+  .hero p { margin-top: 24px; font-size: 18px; color: var(--ko-bone-300); max-width: 560px; }
+  .hero-actions { display: flex; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+
+  /* Ticker */
+  .ticker {
+    border-top: 1px solid var(--ko-line); border-bottom: 1px solid var(--ko-line);
+    background: var(--ko-ink-800); overflow: hidden; white-space: nowrap;
+  }
+  .ticker-track { display: inline-flex; gap: 48px; padding: 14px 0; animation: scroll 60s linear infinite; }
+  .ticker-item { font-size: 14px; color: var(--ko-bone-300); }
+  .ticker-item b { color: var(--ko-bone-100); font-weight: 600; }
+  .ticker-item .lg { color: var(--ko-ochre-400); font-size: 12px; letter-spacing: .12em; margin-right: 10px; }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* Sections */
+  section { padding: 110px 0; }
+  .section-head { max-width: 620px; margin-bottom: 48px; }
+  .section-head h2 {
+    font-size: clamp(30px, 4vw, 44px); line-height: 1.1;
+    letter-spacing: -0.02em; font-weight: 700;
+  }
+  .section-head p { margin-top: 16px; color: var(--ko-bone-300); }
+  .meta { font-size: 13px; color: var(--ko-bone-300); margin-top: 12px; }
+
+  /* League tabs */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
+  .tab {
+    padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--ko-line); background: none; color: var(--ko-bone-300); cursor: pointer; font-family: inherit;
+  }
+  .tab.on { color: var(--ko-bone-100); border-color: rgba(242,236,228,.4); background: rgba(242,236,228,.06); }
+
+  /* Score cards */
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .card {
+    background: var(--ko-ink-700); border-radius: 14px; padding: 22px 24px;
+  }
+  .card-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--ko-bone-300); letter-spacing: .08em; text-transform: uppercase; }
+  .card-top .lg { color: var(--ko-ochre-400); font-weight: 600; }
+  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 16px; }
+  .row .abbr { font-weight: 600; }
+  .row .score { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .row.loser { color: var(--ko-bone-300); }
+  .row.loser .score { color: var(--ko-bone-300); font-weight: 600; }
+  .final { margin-top: 12px; font-size: 12px; color: var(--ko-bone-300); }
+
+  /* Upcoming */
+  .prob-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--ko-bone-300); margin-top: 14px; }
+  .bar { height: 6px; border-radius: 999px; background: rgba(242,236,228,.12); overflow: hidden; margin-top: 8px; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--ko-ochre-400); transition: width 1.4s cubic-bezier(.2,.7,.2,1); border-radius: 999px; }
+  .when { font-size: 14px; color: var(--ko-bone-300); margin-top: 16px; }
+  .when b { color: var(--ko-bone-100); font-weight: 600; }
+
+  /* What to expect */
+  .expect { background: var(--ko-ink-800); }
+  .exp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .exp {
+    border: 1px solid var(--ko-line); border-radius: 14px; padding: 28px 28px 30px;
+  }
+  .exp .lg { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ko-ochre-400); font-weight: 600; }
+  .exp h3 { font-size: 22px; margin: 10px 0 12px; font-weight: 600; }
+  .exp p { color: var(--ko-bone-300); font-size: 15px; }
+  .exp ul { margin-top: 14px; padding-left: 18px; color: var(--ko-bone-300); font-size: 14px; }
+  .exp li + li { margin-top: 6px; }
+  .howto { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--ko-line); display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 32px; }
+  .howto h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .howto p { font-size: 14px; color: var(--ko-bone-300); }
+
+  /* CTA */
+  .cta { background: linear-gradient(172deg, var(--ko-ink-900) 0%, var(--ko-ink-800) 40%, var(--ko-ember-600) 100%); padding: 120px 0; }
+  .cta h2 { font-size: clamp(36px, 5vw, 60px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 700; max-width: 760px; }
+  .cta p { margin-top: 20px; color: var(--ko-bone-300); max-width: 480px; }
+  .cta .hero-actions { margin-top: 36px; }
+
+  footer { border-top: 1px solid var(--ko-line); padding: 32px 0; font-size: 13px; color: var(--ko-bone-300); }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer .disclaimer { margin-top: 12px; font-size: 12px; max-width: 640px; }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .exp-grid { grid-template-columns: 1fr; }
+    .howto { grid-template-columns: 1fr; gap: 20px; }
+  }
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .hero { padding: 88px 0; }
+    section { padding: 80px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; }
+    .bar > span { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap">
+      <a href="#" class="logo">Knockout</a>
+      <div class="nav-links">
+        <a href="#scores">Scores</a>
+        <a href="#upcoming">Upcoming</a>
+        <a href="#expect">What to expect</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <a href="#get-started" class="btn btn-primary">Get started</a>
+    </div>
+  </nav>
+
+  <header class="hero grain">
+    <div class="wrap">
+      <div class="eyebrow">Knockout · Round 1</div>
+      <h1>Hit harder.<br>Stay upright.</h1>
+      <p>Scores, odds, and a plain-English guide to every game we cover. Start with what's on, then learn what to watch for.</p>
+      <div class="hero-actions">
+        <a href="#scores" class="btn btn-primary">See the scores</a>
+        <a href="#expect" class="btn btn-ghost">What to expect</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="ticker" aria-label="Recent results">
+    <div class="ticker-track" id="ticker"></div>
+  </div>
+
+  <section id="scores">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Recent results</h2>
+        <p>Final scores from the last few days, across the leagues we cover.</p>
+        <div class="meta">Snapshot as of Tuesday, October 27, 2026, 1:50 PM ET</div>
+      </div>
+      <div class="tabs" id="tabs-results"></div>
+      <div class="grid" id="results"></div>
+    </div>
+  </section>
+
+  <section id="upcoming" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Coming up</h2>
+        <p>Upcoming games with the model's current win probability for each side. Odds shift as the game approaches.</p>
+      </div>
+      <div class="tabs" id="tabs-upcoming"></div>
+      <div class="grid" id="upcoming-grid"></div>
+    </div>
+  </section>
+
+  <section class="expect" id="expect">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What to expect</h2>
+        <p>A quick guide to each league: how long a game runs, what the scoreboard means, and what to watch.</p>
+      </div>
+
+      <div class="exp-grid">
+        <div class="exp">
+          <div class="lg">NFL</div>
+          <h3>About three hours, four quarters</h3>
+          <p>Four 15-minute quarters. Clock stops often, so real time runs longer than the game clock.</p>
+          <ul>
+            <li>Scores come in field goals (3) and touchdowns (7 with the extra point).</li>
+            <li>Big leads can swing fast; a single turnover can change a game.</li>
+          </ul>
+        </div>
+        <div class="exp">
+          <div class="lg">NBA</div>
+          <h3>Around two and a half hours, high scoring</h3>
+          <p>Four 12-minute quarters. Totals in the 100s are normal, and leads change often.</p>
+          <ul>
+            <li>Watch the last four minutes. Late runs decide most close games.</li>
+            <li>Win probability moves quickly on every possession.</li>
+          </ul>
+        </div>
+        <div class="exp">
+          <div class="lg">NHL</div>
+          <h3>Three periods, low scores, big swings</h3>
+          <p>Three 20-minute periods. Most games end with fewer than seven total goals.</p>
+          <ul>
+            <li>One goal can flip the odds. Overtime and shootouts are settled quickly.</li>
+            <li>Goalie performance is the single biggest variable to watch.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="howto">
+        <div>
+          <h4>Reading the score</h4>
+          <p>Scores show away team first, then home team. The winning side is in bright type.</p>
+        </div>
+        <div>
+          <h4>Reading the odds</h4>
+          <p>Win probability is the model's estimate for each side before kickoff or puck drop. It is not a guarantee.</p>
+        </div>
+        <div>
+          <h4>Before you watch</h4>
+          <p>Start with the favorite's win probability, then check the time. Tip-off, puck drop, and kickoff are all in local time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta grain" id="get-started">
+    <div class="wrap">
+      <h2>Ready for round two?</h2>
+      <p>Start free. Upgrade when you're ready. Cancel anytime.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-primary">Start free</a>
+        <a href="#expect" class="btn btn-ghost">Read the guide</a>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <div class="wrap">
+      <span>© 2026 Knockout</span>
+      <span>hello@knockout.example</span>
+    </div>
+    <div class="wrap">
+      <p class="disclaimer">Scores and win probabilities come from a data feed and are a snapshot taken at the time shown. Check the official league site for final results.</p>
+    </div>
+  </footer>
+
+<script>
+  const RESULTS = [
+    { lg: "NFL", date: "Mon, Oct 26", a: ["PHI","Philadelphia Eagles",21], h: ["DAL","Dallas Cowboys",38],   tag: "Monday Night" },
+    { lg: "NFL", date: "Sun, Oct 25", a: ["KC","Kansas City Chiefs",3],   h: ["SEA","Seattle Seahawks",20], tag: "Sunday Night" },
+    { lg: "NFL", date: "Sun, Oct 25", a: ["CIN","Cincinnati Bengals",35], h: ["BAL","Baltimore Ravens",13], tag: "" },
+    { lg: "NBA", date: "Mon, Oct 26", a: ["GSW","Golden State Warriors",134], h: ["DEN","Denver Nuggets",114], tag: "" },
+    { lg: "NBA", date: "Mon, Oct 26", a: ["CHI","Chicago Bulls",99],     h: ["BOS","Boston Celtics",134],  tag: "" },
+    { lg: "NBA", date: "Mon, Oct 26", a: ["MIN","Minnesota Timberwolves",125], h: ["CLE","Cleveland Cavaliers",127], tag: "" },
+    { lg: "NHL", date: "Mon, Oct 26", a: ["TOR","Toronto Maple Leafs",2], h: ["CGY","Calgary Flames",5],    tag: "" },
+    { lg: "NHL", date: "Mon, Oct 26", a: ["LA","Los Angeles Kings",6],    h: ["NYR","New York Rangers",3],  tag: "" },
+    { lg: "NHL", date: "Mon, Oct 26", a: ["DET","Detroit Red Wings",4],   h: ["EDM","Edmonton Oilers",3],   tag: "" }
+  ];
+
+  const UPCOMING = [
+    { lg: "NBA", when: "Tue, Oct 27 · 7:30 PM ET", a: "BKN", h: "BOS", fav: "BOS", pct: 83.1 },
+    { lg: "NBA", when: "Tue, Oct 27 · 8:00 PM ET", a: "DET", h: "NYK", fav: "NYK", pct: 60.9 },
+    { lg: "NBA", when: "Tue, Oct 27 · 8:00 PM ET", a: "SAC", h: "SAS", fav: "SAS", pct: 92.5 },
+    { lg: "NHL", when: "Tue, Oct 27 · 7:00 PM ET", a: "CBJ", h: "PHI", fav: "CBJ", pct: 52 },
+    { lg: "NHL", when: "Tue, Oct 27 · 8:00 PM ET", a: "BOS", h: "CAR", fav: "CAR", pct: 62.7 },
+    { lg: "NHL", when: "Tue, Oct 27 · 8:00 PM ET", a: "FLA", h: "WPG", fav: "FLA", pct: 53.9 },
+    { lg: "NFL", when: "Thu, Oct 29 · 8:15 PM ET", a: "CAR", h: "GB",  fav: "GB",  pct: 64 }
+  ];
+
+  const LEAGUES = ["All", "NFL", "NBA", "NHL"];
+  let resultsFilter = "All";
+  let upcomingFilter = "All";
+
+  function tabs(el, state, onPick) {
+    el.innerHTML = "";
+    LEAGUES.forEach(lg => {
+      const b = document.createElement("button");
+      b.className = "tab" + (lg === state ? " on" : "");
+      b.textContent = lg;
+      b.onclick = () => onPick(lg);
+      el.appendChild(b);
+    });
+  }
+
+  function renderResults() {
+    tabs(document.getElementById("tabs-results"), resultsFilter, lg => { resultsFilter = lg; renderResults(); });
+    const grid = document.getElementById("results");
+    grid.innerHTML = "";
+    RESULTS.filter(g => resultsFilter === "All" || g.lg === resultsFilter).forEach(g => {
+      const aWon = g.a[2] > g.h[2];
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-top"><span class="lg">${g.lg}</span><span>${g.tag || g.date}</span></div>
+        <div class="row ${aWon ? "" : "loser"}"><span class="abbr">${g.a[0]}</span><span class="score num" data-to="${g.a[2]}">0</span></div>
+        <div class="row ${aWon ? "loser" : ""}"><span class="abbr">${g.h[0]}</span><span class="score num" data-to="${g.h[2]}">0</span></div>
+        <div class="final">Final · ${g.date}</div>`;
+      grid.appendChild(card);
+    });
+    observeCounts();
+  }
+
+  function renderUpcoming() {
+    tabs(document.getElementById("tabs-upcoming"), upcomingFilter, lg => { upcomingFilter = lg; renderUpcoming(); });
+    const grid = document.getElementById("upcoming-grid");
+    grid.innerHTML = "";
+    UPCOMING.filter(g => upcomingFilter === "All" || g.lg === upcomingFilter).forEach(g => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-top"><span class="lg">${g.lg}</span><span>${g.when.split(" · ")[0]}</span></div>
+        <div class="row"><span class="abbr">${g.a} <span style="color:var(--ko-bone-300);font-weight:400">@</span> ${g.h}</span></div>
+        <div class="prob-head"><span>${g.fav} favored</span><span><span class="num" data-to="${g.pct}" data-dec="1">0</span>%</span></div>
+        <div class="bar"><span data-width="${g.pct}"></span></div>
+        <div class="when">${g.when.split(" · ")[1]}</div>`;
+      grid.appendChild(card);
+    });
+    observeBars();
+  }
+
+  function renderTicker() {
+    const items = RESULTS.map(g => `<span class="ticker-item"><span class="lg">${g.lg}</span><b>${g.a[0]} ${g.a[2]}</b> at <b>${g.h[0]} ${g.h[2]}</b></span>`).join("");
+    document.getElementById("ticker").innerHTML = items + items;
+  }
+
+  function animateCount(el) {
+    const to = parseFloat(el.dataset.to);
+    const dec = parseInt(el.dataset.dec || "0", 10);
+    const dur = 1200;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = (to * eased).toFixed(dec);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function animateBar(span) {
+    requestAnimationFrame(() => { span.style.width = span.dataset.width + "%"; });
+  }
+
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { animateCount(e.target); countObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.3 });
+
+  const barObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateBar(e.target);
+        e.target.closest(".card").querySelectorAll("[data-to]").forEach(animateCount);
+        barObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  function observeCounts() {
+    document.querySelectorAll("#results [data-to]").forEach(el => countObs.observe(el));
+  }
+  function observeBars() {
+    document.querySelectorAll("#upcoming-grid [data-width]").forEach(el => barObs.observe(el));
+  }
+
+  renderTicker();
+  renderResults();
+  renderUpcoming();
+</script>
+</body>
+</html>
