@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Knockout</title>
+<style>
+  :root {
+    --ko-ink-900: #0f0d0c;
+    --ko-ink-800: #1a1614;
+    --ko-ink-700: #2a2421;
+    --ko-ember-600: #6b2a22;
+    --ko-ember-500: #8c3a2d;
+    --ko-ochre-400: #b0793f;
+    --ko-bone-100: #f2ece4;
+    --ko-bone-300: #bfb4a7;
+    --ko-line: rgba(242, 236, 228, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--ko-ink-900);
+    color: var(--ko-bone-100);
+    -webkit-font-smoothing: antialiased;
+    display: flex; justify-content: center;
+  }
+  button { font-family: inherit; }
+
+  /* App shell: full-bleed on phones, a phone-sized frame on desktop */
+  .app {
+    width: 100%; max-width: 420px; min-height: 100%;
+    display: flex; flex-direction: column; position: relative;
+    background: var(--ko-ink-900);
+  }
+  @media (min-width: 520px) {
+    body { padding: 32px 0; }
+    .app { min-height: 860px; border-radius: 36px; overflow: hidden; border: 1px solid var(--ko-line); }
+  }
+
+  .grain { position: relative; isolation: isolate; overflow: hidden; }
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0; pointer-events: none; z-index: -1;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  }
+
+  /* Header */
+  .top {
+    padding: 52px 20px 18px;
+    background: linear-gradient(172deg, var(--ko-ink-800) 0%, var(--ko-ink-900) 60%, var(--ko-ember-600) 130%);
+  }
+  .top-row { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; }
+  .eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ko-bone-300); }
+  .top h1 { font-size: 30px; letter-spacing: -0.02em; line-height: 1.1; margin-top: 16px; font-weight: 700; }
+  .top .meta { font-size: 12px; color: var(--ko-bone-300); margin-top: 8px; }
+
+  /* Ticker */
+  .ticker {
+    border-top: 1px solid var(--ko-line); border-bottom: 1px solid var(--ko-line);
+    background: var(--ko-ink-800); overflow: hidden; white-space: nowrap;
+  }
+  .ticker-track { display: inline-flex; gap: 36px; padding: 11px 0; animation: scroll 50s linear infinite; }
+  .ticker-item { font-size: 13px; color: var(--ko-bone-300); }
+  .ticker-item b { color: var(--ko-bone-100); font-weight: 600; }
+  .ticker-item .lg { color: var(--ko-ochre-400); font-size: 11px; letter-spacing: .1em; margin-right: 8px; }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* Content */
+  .content { flex: 1; overflow-y: auto; padding: 20px 16px 110px; }
+  .view { display: none; }
+  .view.on { display: block; }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--ko-line); background: none; color: var(--ko-bone-300); cursor: pointer;
+  }
+  .chip.on { color: var(--ko-bone-100); border-color: rgba(242,236,228,.4); background: rgba(242,236,228,.06); }
+
+  .card { background: var(--ko-ink-700); border-radius: 18px; padding: 16px 18px; margin-bottom: 12px; }
+  .card-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--ko-bone-300); letter-spacing: .08em; text-transform: uppercase; }
+  .card-top .lg { color: var(--ko-ochre-400); font-weight: 600; }
+  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 15px; }
+  .row .abbr { font-weight: 600; }
+  .row .score { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .row.loser { color: var(--ko-bone-300); }
+  .row.loser .score { color: var(--ko-bone-300); font-weight: 600; }
+  .final { margin-top: 10px; font-size: 11px; color: var(--ko-bone-300); }
+
+  .prob-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--ko-bone-300); margin-top: 12px; }
+  .prob-head .num { font-variant-numeric: tabular-nums; color: var(--ko-bone-100); font-weight: 600; }
+  .bar { height: 6px; border-radius: 999px; background: rgba(242,236,228,.12); overflow: hidden; margin-top: 8px; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--ko-ochre-400); border-radius: 999px; transition: width 1.2s cubic-bezier(.2,.7,.2,1); }
+  .when { font-size: 13px; color: var(--ko-bone-300); margin-top: 12px; }
+
+  /* What to expect */
+  .exp { border: 1px solid var(--ko-line); border-radius: 18px; padding: 18px; margin-bottom: 12px; }
+  .exp .lg { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ko-ochre-400); font-weight: 600; }
+  .exp h3 { font-size: 18px; margin: 8px 0 8px; font-weight: 600; }
+  .exp p { color: var(--ko-bone-300); font-size: 14px; }
+  .exp ul { margin-top: 10px; padding-left: 18px; color: var(--ko-bone-300); font-size: 13px; }
+  .exp li + li { margin-top: 5px; }
+
+  .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 14px; }
+
+  /* Tab bar */
+  .tabbar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: space-around; padding: 10px 12px 22px;
+    background: rgba(15,13,12,.92); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--ko-line);
+  }
+  .tab-btn {
+    background: none; border: 0; color: var(--ko-bone-300); font-size: 12px; font-weight: 600;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 12px; cursor: pointer;
+  }
+  .tab-btn .dot { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid currentColor; opacity: .85; }
+  .tab-btn.on { color: var(--ko-bone-100); }
+  .tab-btn.on .dot { background: var(--ko-ember-500); border-color: var(--ko-ember-500); }
+
+  .cta-btn {
+    display: block; width: 100%; text-align: center; margin-top: 10px;
+    background: var(--ko-ember-500); color: var(--ko-bone-100); border: 0;
+    padding: 14px; border-radius: 999px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .disclaimer { font-size: 11px; color: var(--ko-bone-300); margin-top: 14px; line-height: 1.5; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; }
+    .bar > span { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="top grain">
+    <div class="top-row">
+      <span class="logo">Knockout</span>
+      <span class="eyebrow">Round 1</span>
+    </div>
+    <h1 id="top-title">Scores</h1>
+    <div class="meta">Snapshot as of Tue, Oct 27, 1:50 PM ET</div>
+  </div>
+
+  <div class="ticker" aria-label="Recent results">
+    <div class="ticker-track" id="ticker"></div>
+  </div>
+
+  <main class="content">
+
+    <!-- Scores -->
+    <section class="view on" id="view-scores">
+      <div class="chips" data-group="results"></div>
+      <div id="results"></div>
+    </section>
+
+    <!-- Upcoming -->
+    <section class="view" id="view-upcoming">
+      <div class="chips" data-group="upcoming"></div>
+      <div id="upcoming"></div>
+    </section>
+
+    <!-- Guide -->
+    <section class="view" id="view-guide">
+      <div class="section-title">What to expect</div>
+      <div class="exp">
+        <div class="lg">NFL</div>
+        <h3>About three hours, four quarters</h3>
+        <p>Clock stops often, so real time runs longer than the game clock.</p>
+        <ul>
+          <li>Field goals are 3 points, touchdowns are 7 with the extra point.</li>
+          <li>A single turnover can change a game quickly.</li>
+        </ul>
+      </div>
+      <div class="exp">
+        <div class="lg">NBA</div>
+        <h3>About two and a half hours, high scoring</h3>
+        <p>Four 12-minute quarters. Leads change often.</p>
+        <ul>
+          <li>Late runs decide most close games.</li>
+          <li>Win probability can move on every possession.</li>
+        </ul>
+      </div>
+      <div class="exp">
+        <div class="lg">NHL</div>
+        <h3>Three periods, low scores, big swings</h3>
+        <p>Three 20-minute periods. Most games have fewer than seven total goals.</p>
+        <ul>
+          <li>One goal can flip the odds.</li>
+          <li>Goalie performance is the biggest variable.</li>
+        </ul>
+      </div>
+      <div class="exp">
+        <div class="lg">Reading the app</div>
+        <h3>Scores, odds, and times</h3>
+        <p>Scores list the away team first. Win probability is the model's estimate before puck drop, tip-off, or kickoff, and it is not a guarantee.</p>
+      </div>
+      <button class="cta-btn">Start free</button>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn on" data-view="scores"><span class="dot"></span>Scores</button>
+    <button class="tab-btn" data-view="upcoming"><span class="dot"></span>Upcoming</button>
+    <button class="tab-btn" data-view="guide"><span class="dot"></span>Guide</button>
+  </nav>
+
+</div>
+
+<script>
+  const RESULTS = [
+    { lg: "NFL", date: "Mon, Oct 26", a: ["PHI","Philadelphia Eagles",21], h: ["DAL","Dallas Cowboys",38],   tag: "Monday Night" },
+    { lg: "NFL", date: "Sun, Oct 25", a: ["KC","Kansas City Chiefs",3],   h: ["SEA","Seattle Seahawks",20], tag: "Sunday Night" },
+    { lg: "NFL", date: "Sun, Oct 25", a: ["CIN","Cincinnati Bengals",35], h: ["BAL","Baltimore Ravens",13], tag: "" },
+    { lg: "NBA", date: "Mon, Oct 26", a: ["GSW","Golden State Warriors",134], h: ["DEN","Denver Nuggets",114], tag: "" },
+    { lg: "NBA", date: "Mon, Oct 26", a: ["CHI","Chicago Bulls",99],     h: ["BOS","Boston Celtics",134],  tag: "" },
+    { lg: "NBA", date: "Mon, Oct 26", a: ["MIN","Minnesota Timberwolves",125], h: ["CLE","Cleveland Cavaliers",127], tag: "" },
+    { lg: "NHL", date: "Mon, Oct 26", a: ["TOR","Toronto Maple Leafs",2], h: ["CGY","Calgary Flames",5],    tag: "" },
+    { lg: "NHL", date: "Mon, Oct 26", a: ["LA","Los Angeles Kings",6],    h: ["NYR","New York Rangers",3],  tag: "" },
+    { lg: "NHL", date: "Mon, Oct 26", a: ["DET","Detroit Red Wings",4],   h: ["EDM","Edmonton Oilers",3],   tag: "" }
+  ];
+
+  const UPCOMING = [
+    { lg: "NBA", when: "Tue, Oct 27 · 7:30 PM ET", a: "BKN", h: "BOS", fav: "BOS", pct: 83.1 },
+    { lg: "NBA", when: "Tue, Oct 27 · 8:00 PM ET", a: "DET", h: "NYK", fav: "NYK", pct: 60.9 },
+    { lg: "NBA", when: "Tue, Oct 27 · 8:00 PM ET", a: "SAC", h: "SAS", fav: "SAS", pct: 92.5 },
+    { lg: "NHL", when: "Tue, Oct 27 · 7:00 PM ET", a: "CBJ", h: "PHI", fav: "CBJ", pct: 52 },
+    { lg: "NHL", when: "Tue, Oct 27 · 8:00 PM ET", a: "BOS", h: "CAR", fav: "CAR", pct: 62.7 },
+    { lg: "NHL", when: "Tue, Oct 27 · 8:00 PM ET", a: "FLA", h: "WPG", fav: "FLA", pct: 53.9 },
+    { lg: "NFL", when: "Thu, Oct 29 · 8:15 PM ET", a: "CAR", h: "GB",  fav: "GB",  pct: 64 }
+  ];
+
+  const LEAGUES = ["All", "NFL", "NBA", "NHL"];
+  const state = { results: "All", upcoming: "All" };
+  const TITLES = { scores: "Scores", upcoming: "Coming up", guide: "Guide" };
+
+  function chips(group) {
+    const el = document.querySelector(`.chips[data-group="${group}"]`);
+    el.innerHTML = "";
+    LEAGUES.forEach(lg => {
+      const b = document.createElement("button");
+      b.className = "chip" + (state[group] === lg ? " on" : "");
+      b.textContent = lg;
+      b.onclick = () => { state[group] = lg; render(group); };
+      el.appendChild(b);
+    });
+  }
+
+  function renderResults() {
+    chips("results");
+    const wrap = document.getElementById("results");
+    wrap.innerHTML = "";
+    RESULTS.filter(g => state.results === "All" || g.lg === state.results).forEach(g => {
+      const aWon = g.a[2] > g.h[2];
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-top"><span class="lg">${g.lg}</span><span>${g.tag || g.date}</span></div>
+        <div class="row ${aWon ? "" : "loser"}"><span class="abbr">${g.a[0]}</span><span class="score" data-to="${g.a[2]}">0</span></div>
+        <div class="row ${aWon ? "loser" : ""}"><span class="abbr">${g.h[0]}</span><span class="score" data-to="${g.h[2]}">0</span></div>
+        <div class="final">Final · ${g.date}</div>`;
+      wrap.appendChild(card);
+    });
+    observeCounts();
+  }
+
+  function renderUpcoming() {
+    chips("upcoming");
+    const wrap = document.getElementById("upcoming");
+    wrap.innerHTML = "";
+    UPCOMING.filter(g => state.upcoming === "All" || g.lg === state.upcoming).forEach(g => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-top"><span class="lg">${g.lg}</span><span>${g.when.split(" · ")[0]}</span></div>
+        <div class="row"><span class="abbr">${g.a} <span style="color:var(--ko-bone-300);font-weight:400">@</span> ${g.h}</span></div>
+        <div class="prob-head"><span>${g.fav} favored</span><span><span class="num" data-to="${g.pct}" data-dec="1">0</span>%</span></div>
+        <div class="bar"><span data-width="${g.pct}"></span></div>
+        <div class="when">${g.when.split(" · ")[1]}</div>`;
+      wrap.appendChild(card);
+    });
+    observeBars();
+  }
+
+  function render(group) {
+    if (group === "results") renderResults();
+    if (group === "upcoming") renderUpcoming();
+  }
+
+  function renderTicker() {
+    const items = RESULTS.map(g => `<span class="ticker-item"><span class="lg">${g.lg}</span><b>${g.a[0]} ${g.a[2]}</b> at <b>${g.h[0]} ${g.h[2]}</b></span>`).join("");
+    document.getElementById("ticker").innerHTML = items + items;
+  }
+
+  function animateCount(el) {
+    const to = parseFloat(el.dataset.to);
+    const dec = parseInt(el.dataset.dec || "0", 10);
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / 1100);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = (to * eased).toFixed(dec);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCount(e.target); countObs.unobserve(e.target); } });
+  }, { threshold: 0.3 });
+
+  const barObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        requestAnimationFrame(() => { e.target.style.width = e.target.dataset.width + "%"; });
+        e.target.closest(".card").querySelectorAll("[data-to]").forEach(animateCount);
+        barObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  function observeCounts() { document.querySelectorAll("#results [data-to]").forEach(el => countObs.observe(el)); }
+  function observeBars() { document.querySelectorAll("#upcoming [data-width]").forEach(el => barObs.observe(el)); }
+
+  // Bottom tab switching
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const view = btn.dataset.view;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("on", b === btn));
+      document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "view-" + view));
+      document.getElementById("top-title").textContent = TITLES[view];
+      if (view === "upcoming") renderUpcoming();
+      if (view === "scores") renderResults();
+    });
+  });
+
+  renderTicker();
+  renderResults();
+</script>
+</body>
+</html>
