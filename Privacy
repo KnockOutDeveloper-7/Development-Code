@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | KnockOut</title>
+  <link rel="icon" type="image/webp" href="images/favicon.webp">
+  <link rel="apple-touch-icon" href="images/favicon.webp">
+  <meta name="theme-color" content="#2a0fa8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="privacy">
+  <header id="site-header"></header>
+
+  <main>
+    <div class="page-hero">
+      <div class="container">
+        <h1 data-i18n="pv.title"></h1>
+        <p data-i18n="pv.updated"></p>
+      </div>
+    </div>
+
+    <section style="padding-top: 30px;">
+      <!-- Template text. Have a lawyer review it before launch. -->
+      <div class="container legal">
+        <div class="legal-nav">
+          <a class="btn btn-ghost btn-sm" href="#privacy" data-i18n="pv.privacy"></a>
+          <a class="btn btn-ghost btn-sm" href="#agreement" data-i18n="pv.terms"></a>
+        </div>
+
+        <h2 id="privacy" data-i18n="pv.privacy"></h2>
+        <p>This Privacy Policy explains how KnockOut ("we", "us") collects, uses and protects your information when you use our website and app.</p>
+
+        <h3>Information we collect</h3>
+        <ul>
+          <li><strong>Account information:</strong> your name and email address, or the basic profile shared by Google or Apple when you sign in with them.</li>
+          <li><strong>Usage information:</strong> the games you view, analyses you save, questions you ask the KnockOut Assistant, and your language setting.</li>
+          <li><strong>Device information:</strong> browser or device type and general technical data needed to keep the service running.</li>
+        </ul>
+
+        <h3>How we use it</h3>
+        <ul>
+          <li>To run your account and save your analyses.</li>
+          <li>To improve our analyzer, chatbot and features.</li>
+          <li>To send updates you've signed up for. You can unsubscribe at any time.</li>
+        </ul>
+
+        <h3>What we don't do</h3>
+        <p>We don't sell your personal information. We only share it with service providers who help us run KnockOut (such as hosting and sign-in providers), and only as much as they need.</p>
+
+        <h3>Your choices</h3>
+        <p>You can view, update or delete your account at any time. To request a copy or deletion of your data, contact us at the email below.</p>
+
+        <h3>Children</h3>
+        <p>KnockOut is not intended for children under 13, and we don't knowingly collect their information.</p>
+
+        <h3>Security</h3>
+        <p>We use reasonable safeguards to protect your information, but no online service can be 100% secure.</p>
+
+        <h2 id="agreement" data-i18n="pv.terms"></h2>
+        <p>By creating an account or using KnockOut, you agree to these terms.</p>
+
+        <h3>Using KnockOut</h3>
+        <ul>
+          <li>KnockOut is free for personal, non-commercial use.</li>
+          <li>You're responsible for keeping your account secure.</li>
+          <li>Don't misuse the service, try to break it, or copy our content for commercial use.</li>
+        </ul>
+
+        <h3>Our analysis</h3>
+        <p>Game analysis, win probabilities and chatbot answers are for entertainment and education only. They may be inaccurate and are not betting or financial advice.</p>
+
+        <h3>Changes</h3>
+        <p>We may update this policy and agreement. If we make major changes, we'll let you know on the site or in the app.</p>
+
+        <h3>Contact</h3>
+        <p>Questions? Email us at <strong>[your contact email]</strong>.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
