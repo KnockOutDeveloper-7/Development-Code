@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KnockOut | Sports Analyzed</title>
+  <meta name="description" content="KnockOut is a free, line-by-line analyzer for NFL, MLB, NBA and NHL games.">
+  <link rel="icon" type="image/webp" href="images/favicon.webp">
+  <link rel="apple-touch-icon" href="images/favicon.webp">
+  <meta name="theme-color" content="#2a0fa8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="home">
+  <header id="site-header"></header>
+
+  <main>
+    <!-- Hero: sign up, it's free -->
+    <section class="hero">
+      <div class="container">
+        <img class="hero-image" src="images/hero.webp" alt="KnockOut: Sports analyzed">
+        <span class="hero-badge" data-i18n="home.badge"></span>
+        <p class="hero-text" data-i18n="home.heroText"></p>
+        <div class="hero-actions">
+          <a href="signin.html?mode=signup" class="btn btn-primary" data-i18n="home.ctaSignup"></a>
+          <a href="#demo" class="btn btn-outline" data-i18n="home.ctaDemo"></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- What KnockOut is -->
+    <section class="alt-bg">
+      <div class="container" style="max-width: 820px; text-align: center;">
+        <h2 class="section-title" data-i18n="home.whatTitle"></h2>
+        <p class="section-subtitle" style="margin-bottom: 0; font-size: 1.1rem;" data-i18n="home.whatText"></p>
+      </div>
+    </section>
+
+    <!-- Animated game example with sport selection on top -->
+    <section id="demo">
+      <div class="container" style="max-width: 860px;">
+        <h2 class="section-title" data-i18n="home.demoTitle"></h2>
+        <p class="section-subtitle" data-i18n="home.demoSub"></p>
+        <div class="sport-tabs" id="demo-tabs"></div>
+        <div id="demo-analyzer"></div>
+        <p class="demo-note" data-i18n="demo.note"></p>
+      </div>
+    </section>
+
+    <!-- Problem / solution -->
+    <section class="alt-bg">
+      <div class="container ps-grid">
+        <div class="card ps-card problem">
+          <h3 data-i18n="home.problemTitle"></h3>
+          <p data-i18n="home.problemText"></p>
+        </div>
+        <div class="card ps-card solution">
+          <h3 data-i18n="home.solutionTitle"></h3>
+          <p data-i18n="home.solutionText"></p>
+          <div class="league-row">
+            <span class="league-pill">🏈 NFL</span>
+            <span class="league-pill">⚾ MLB</span>
+            <span class="league-pill">🏀 NBA</span>
+            <span class="league-pill">🏒 NHL</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Free, sign up now -->
+    <section class="cta">
+      <div class="container">
+        <h2 class="section-title" data-i18n="home.ctaTitle"></h2>
+        <p data-i18n="home.ctaText"></p>
+        <a href="signin.html?mode=signup" class="btn btn-primary" data-i18n="home.ctaBtn"></a>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/analyzer.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabs = document.getElementById("demo-tabs");
+      const demo = new KOAnalyzer(document.getElementById("demo-analyzer"), {
+        delay: 2800,
+        controls: false,
+        loop: true
+      });
+
+      function show(sport) {
+        tabs.querySelectorAll(".sport-tab").forEach(b => b.classList.toggle("active", b.dataset.sport === sport));
+        demo.load(KO_DATA.live.find(g => g.sport === sport));
+      }
+
+      Object.entries(KO_DATA.sports).forEach(([key, sport]) => {
+        const btn = document.createElement("button");
+        btn.className = "sport-tab";
+        btn.dataset.sport = key;
+        btn.textContent = `${sport.ball} ${sport.name}`;
+        btn.addEventListener("click", () => show(key));
+        tabs.appendChild(btn);
+      });
+
+      show("nfl");
+    });
+  </script>
+</body>
+</html>
